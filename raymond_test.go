@@ -1,8 +1,13 @@
-package mario
+package mario_test
 
-import "fmt"
+import (
+	"testing"
 
-func Example() {
+	"github.com/imantung/mario"
+	"github.com/stretchr/testify/require"
+)
+
+func TestParse(t *testing.T) {
 	source := "<h1>{{title}}</h1><p>{{body.content}}</p>"
 
 	ctx := map[string]interface{}{
@@ -11,30 +16,16 @@ func Example() {
 	}
 
 	// parse template
-	tpl := MustParse(source)
+	tpl, err := mario.Parse(source)
+	require.NoError(t, err)
 
 	// evaluate template with context
-	output := tpl.MustExec(ctx)
-
-	// alternatively, for one shots:
-	// output :=  MustRender(source, ctx)
-
-	fmt.Print(output)
-	// Output: <h1>foo</h1><p>bar</p>
+	output, err := tpl.Exec(ctx)
+	require.NoError(t, err)
+	require.Equal(t, `<h1>foo</h1><p>bar</p>`, output)
 }
 
-func Example_struct() {
-	source := `<div class="post">
-  <h1>By {{fullName author}}</h1>
-  <div class="body">{{body}}</div>
-
-  <h1>Comments</h1>
-
-  {{#each comments}}
-  <h2>By {{fullName author}}</h2>
-  <div class="body">{{content}}</div>
-  {{/each}}
-</div>`
+func Test_struct(t *testing.T) {
 
 	type Person struct {
 		FirstName string
@@ -52,64 +43,61 @@ func Example_struct() {
 		Comments []Comment
 	}
 
-	ctx := Post{
-		Person{"Jean", "Valjean"},
-		"Life is difficult",
-		[]Comment{
-			Comment{
-				Person{"Marcel", "Beliveau"},
-				"LOL!",
-			},
-		},
-	}
-
-	RegisterHelper("fullName", func(person Person) string {
+	mario.RegisterHelper("fullName", func(person Person) string {
 		return person.FirstName + " " + person.LastName
 	})
 
-	output := MustRender(source, ctx)
+	require.Equal(t,
+		"<div class=\"post\">\n  <h1>By Jean Valjean</h1>\n  <div class=\"body\">Life is difficult</div>\n\n  <h1>Comments</h1>\n\n  <h2>By Marcel Beliveau</h2>\n  <div class=\"body\">LOL!</div>\n</div>",
+		mario.MustRender(
+			`<div class="post">
+  <h1>By {{fullName author}}</h1>
+  <div class="body">{{body}}</div>
 
-	fmt.Print(output)
-	// Output: <div class="post">
-	//   <h1>By Jean Valjean</h1>
-	//   <div class="body">Life is difficult</div>
-	//
-	//   <h1>Comments</h1>
-	//
-	//   <h2>By Marcel Beliveau</h2>
-	//   <div class="body">LOL!</div>
-	// </div>
+  <h1>Comments</h1>
+
+  {{#each comments}}
+  <h2>By {{fullName author}}</h2>
+  <div class="body">{{content}}</div>
+  {{/each}}
+</div>`,
+			Post{
+				Person{"Jean", "Valjean"},
+				"Life is difficult",
+				[]Comment{
+					Comment{
+						Person{"Marcel", "Beliveau"},
+						"LOL!",
+					},
+				},
+			},
+		),
+	)
+
 }
 
-func ExampleRender() {
-	tpl := "<h1>{{title}}</h1><p>{{body.content}}</p>"
-
-	ctx := map[string]interface{}{
-		"title": "foo",
-		"body":  map[string]string{"content": "bar"},
-	}
-
+func TestRender(t *testing.T) {
 	// render template with context
-	output, err := Render(tpl, ctx)
-	if err != nil {
-		panic(err)
-	}
+	output, err := mario.Render(
+		"<h1>{{title}}</h1><p>{{body.content}}</p>",
+		map[string]interface{}{
+			"title": "foo",
+			"body":  map[string]string{"content": "bar"},
+		})
+	require.NoError(t, err)
+	require.Equal(t, `<h1>foo</h1><p>bar</p>`, output)
 
-	fmt.Print(output)
-	// Output: <h1>foo</h1><p>bar</p>
 }
 
-func ExampleMustRender() {
-	tpl := "<h1>{{title}}</h1><p>{{body.content}}</p>"
-
-	ctx := map[string]interface{}{
-		"title": "foo",
-		"body":  map[string]string{"content": "bar"},
-	}
-
-	// render template with context
-	output := MustRender(tpl, ctx)
-
-	fmt.Print(output)
-	// Output: <h1>foo</h1><p>bar</p>
+func TestMustRender(t *testing.T) {
+	require.Equal(t,
+		`<h1>foo</h1><p>bar</p>`,
+		mario.MustRender(
+			"<h1>{{title}}</h1><p>{{body.content}}</p>",
+			map[string]interface{}{
+				"title": "foo",
+				"body":  map[string]string{"content": "bar"},
+			},
+		),
+	)
 }

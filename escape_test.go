@@ -1,20 +1,25 @@
-package mario
+package mario_test
 
-import "fmt"
+import (
+	"testing"
 
-func ExampleEscape() {
-	tpl := MustParse("{{link url text}}")
+	"github.com/imantung/mario"
+	"github.com/stretchr/testify/require"
+)
 
-	tpl.RegisterHelper("link", func(url string, text string) SafeString {
-		return SafeString("<a href='" + Escape(url) + "'>" + Escape(text) + "</a>")
+func TestEscape(t *testing.T) {
+	tpl, err := mario.Parse("{{link url text}}")
+	require.NoError(t, err)
+
+	tpl.RegisterHelper("link", func(url string, text string) mario.SafeString {
+		return mario.SafeString("<a href='" + mario.Escape(url) + "'>" + mario.Escape(text) + "</a>")
 	})
 
-	ctx := map[string]string{
+	result, err := tpl.Exec(map[string]string{
 		"url":  "http://www.aymerick.com/",
 		"text": "This is a <em>cool</em> website",
-	}
+	})
+	require.NoError(t, err)
+	require.Equal(t, `<a href='http://www.aymerick.com/'>This is a &lt;em&gt;cool&lt;/em&gt; website</a>`, result)
 
-	result := tpl.MustExec(ctx)
-	fmt.Print(result)
-	// Output: <a href='http://www.aymerick.com/'>This is a &lt;em&gt;cool&lt;/em&gt; website</a>
 }

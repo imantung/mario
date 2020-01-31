@@ -55,6 +55,7 @@ func escape(w writer, s string) error {
 // Escape escapes special HTML characters.
 //
 // It can be used by helpers that return a SafeString and that need to escape some content by themselves.
+// TODO: find library to handle escape html
 func Escape(s string) string {
 	if strings.IndexAny(s, escapedChars) == -1 {
 		return s

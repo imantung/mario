@@ -1,8 +1,11 @@
-package mario
+package mario_test
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/imantung/mario"
 )
 
 type strTest struct {
@@ -27,33 +30,34 @@ func TestStr(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range strTests {
-		if res := Str(test.input); res != test.output {
+		if res := mario.Str(test.input); res != test.output {
 			t.Errorf("Failed to stringify: %s\nexpected:\n\t'%s'got:\n\t%q", test.name, test.output, res)
 		}
 	}
 }
 
-func ExampleStr() {
-	output := Str(3) + " foos are " + Str(true) + " and " + Str(-1.25) + " bars are " + Str(false) + "\n"
-	output += "But you know '" + Str(nil) + "' John Snow\n"
-	output += "map: " + Str(map[string]string{"foo": "bar"}) + "\n"
-	output += "array: " + Str([]interface{}{true, 10, "foo", 5, "bar"})
+func TestStr2(t *testing.T) {
+	output := mario.Str(3) + " foos are " + mario.Str(true) + " and " + mario.Str(-1.25) + " bars are " + mario.Str(false) + "\n"
+	output += "But you know '" + mario.Str(nil) + "' John Snow\n"
+	output += "map: " + mario.Str(map[string]string{"foo": "bar"}) + "\n"
+	output += "array: " + mario.Str([]interface{}{true, 10, "foo", 5, "bar"})
 
-	fmt.Println(output)
-	// Output: 3 foos are true and -1.25 bars are false
-	// But you know '' John Snow
-	// map: map[foo:bar]
-	// array: true10foo5bar
+	require.Equal(t, `3 foos are true and -1.25 bars are false
+But you know '' John Snow
+map: map[foo:bar]
+array: true10foo5bar`, output)
+
 }
 
-func ExampleSafeString() {
-	RegisterHelper("em", func() SafeString {
-		return SafeString("<em>FOO BAR</em>")
+func TestSafeString(t *testing.T) {
+	mario.RegisterHelper("em", func() mario.SafeString {
+		return mario.SafeString("<em>FOO BAR</em>")
 	})
 
-	tpl := MustParse("{{em}}")
+	tpl, err := mario.Parse("{{em}}")
+	require.NoError(t, err)
 
-	result := tpl.MustExec(nil)
-	fmt.Print(result)
-	// Output: <em>FOO BAR</em>
+	output, err := tpl.Exec(nil)
+	require.NoError(t, err)
+	require.Equal(t, `<em>FOO BAR</em>`, output)
 }
