@@ -31,7 +31,7 @@ func TestTemplate_Exec(t *testing.T) {
 	tpl, err := mario.New().Parse("<h1>{{title}}</h1><p>{{body.content}}</p>")
 	require.NoError(t, err)
 
-	output, err := tpl.Exec(map[string]interface{}{
+	output, err := tpl.Execute(map[string]interface{}{
 		"title": "foo",
 		"body":  map[string]string{"content": "bar"},
 	})
@@ -43,7 +43,7 @@ func TestTemplate_MustExec(t *testing.T) {
 	tpl, err := mario.New().Parse("<h1>{{title}}</h1><p>{{body.content}}</p>")
 	require.NoError(t, err)
 
-	output, err := tpl.Exec(map[string]interface{}{
+	output, err := tpl.Execute(map[string]interface{}{
 		"title": "foo",
 		"body":  map[string]string{"content": "bar"},
 	})
@@ -61,7 +61,7 @@ func TestTemplate_ExecWith(t *testing.T) {
 	frame.Set("baz", map[string]string{"bat": "unicorns"})
 
 	// evaluate template
-	output, err := tpl.ExecWith(map[string]interface{}{
+	output, err := tpl.ExecuteWith(map[string]interface{}{
 		"title": "foo",
 		"body":  map[string]string{"content": "bar"},
 	}, frame)

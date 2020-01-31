@@ -15,7 +15,7 @@ func TestEscape(t *testing.T) {
 		return mario.SafeString("<a href='" + mario.Escape(url) + "'>" + mario.Escape(text) + "</a>")
 	})
 
-	result, err := tpl.Exec(map[string]string{
+	result, err := tpl.Execute(map[string]string{
 		"url":  "http://www.aymerick.com/",
 		"text": "This is a <em>cool</em> website",
 	})

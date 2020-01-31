@@ -67,7 +67,7 @@ func launchTests(t *testing.T, tests []Test) {
 			}
 
 			// render template
-			output, err := tpl.ExecWith(test.data, privData)
+			output, err := tpl.ExecuteWith(test.data, privData)
 			if err != nil {
 				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, mario.Str(test.data), err, ast.Print(tpl.Program()))
 			} else {

@@ -57,7 +57,7 @@ func TestSafeString(t *testing.T) {
 	tpl, err := mario.New().Parse("{{em}}")
 	require.NoError(t, err)
 
-	output, err := tpl.Exec(nil)
+	output, err := tpl.Execute(nil)
 	require.NoError(t, err)
 	require.Equal(t, `<em>FOO BAR</em>`, output)
 }

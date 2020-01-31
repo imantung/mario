@@ -167,7 +167,7 @@ func TestEvalStruct(t *testing.T) {
 		},
 	}
 
-	output, err := mario.Must(mario.New().Parse(source)).Exec(data)
+	output, err := mario.Must(mario.New().Parse(source)).Execute(data)
 	require.NoError(t, err)
 	require.Equal(t, expected, output)
 }
@@ -223,7 +223,7 @@ func TestEvalStructTag(t *testing.T) {
 		},
 	}
 
-	output, err := mario.Must(mario.New().Parse(source)).Exec(data)
+	output, err := mario.Must(mario.New().Parse(source)).Execute(data)
 	require.NoError(t, err)
 	require.Equal(t, expected, output)
 }
@@ -238,7 +238,7 @@ func (t *TestFoo) Subject() string {
 func TestEvalMethod(t *testing.T) {
 	t.Parallel()
 	output, err := mario.Must(mario.New().Parse(`Subject is {{subject}}! YES I SAID {{Subject}}!`)).
-		Exec(&TestFoo{})
+		Execute(&TestFoo{})
 	require.NoError(t, err)
 	require.Equal(t, `Subject is foo! YES I SAID foo!`, output)
 
@@ -263,7 +263,7 @@ func TestEvalMethodReturningFunc(t *testing.T) {
 
 	data := &TestBar{}
 
-	output, err := mario.Must(mario.New().Parse(source)).Exec(data)
+	output, err := mario.Must(mario.New().Parse(source)).Execute(data)
 	require.NoError(t, err)
 	require.Equal(t, expected, output)
 

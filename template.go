@@ -47,13 +47,13 @@ func ParseFile(filePath string) (*Template, error) {
 	return New().Parse(string(b))
 }
 
-// Exec evaluates template with given context.
-func (tpl *Template) Exec(ctx interface{}) (result string, err error) {
-	return tpl.ExecWith(ctx, nil)
+// Execute evaluates template with given context.
+func (tpl *Template) Execute(ctx interface{}) (result string, err error) {
+	return tpl.ExecuteWith(ctx, nil)
 }
 
-// ExecWith evaluates template with given context and private data frame.
-func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result string, err error) {
+// ExecuteWith evaluates template with given context and private data frame.
+func (tpl *Template) ExecuteWith(ctx interface{}, privData *DataFrame) (result string, err error) {
 	defer errRecover(&err)
 
 	// setup visitor

@@ -148,7 +148,7 @@ func main() {
 
     for _, ctx := range ctxList {
         // render template
-        result, err := tpl.Exec(ctx)
+        result, err := tpl.Execute(ctx)
         if err != nil {
             panic(err)
         }

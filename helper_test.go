@@ -262,13 +262,13 @@ func TestHelperCtx(t *testing.T) {
 		context := options.Ctx()
 
 		template := name + " - {{ firstName }} {{ lastName }}"
-		result, _ := mario.Must(mario.New().Parse(template)).Exec(context)
+		result, _ := mario.Must(mario.New().Parse(template)).Execute(context)
 
 		return mario.SafeString(result)
 	})
 
 	result, _ := mario.Must(mario.New().Parse(`By {{ template "namefile" }}`)).
-		Exec(Author{"Alan", "Johnson"})
+		Execute(Author{"Alan", "Johnson"})
 	if result != "By namefile - Alan Johnson" {
 		t.Errorf("Failed to render template in helper: %q", result)
 	}
