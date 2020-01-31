@@ -1,4 +1,4 @@
-package raymond
+package mario
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/aymerick/raymond/ast"
-	"github.com/aymerick/raymond/parser"
+	"github.com/imantung/mario/ast"
+	"github.com/imantung/mario/parser"
 )
 
 // Template represents a handlebars template.

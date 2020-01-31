@@ -1,4 +1,4 @@
-package raymond
+package mario
 
 import "testing"
 
@@ -245,7 +245,7 @@ func TestRemoveHelper(t *testing.T) {
 }
 
 //
-// Fixes: https://github.com/aymerick/raymond/issues/2
+// Fixes: https://github.com/imantung/mario/issues/2
 //
 
 type Author struct {

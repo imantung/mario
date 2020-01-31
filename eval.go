@@ -1,4 +1,4 @@
-package raymond
+package mario
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aymerick/raymond/ast"
+	"github.com/imantung/mario/ast"
 )
 
 var (

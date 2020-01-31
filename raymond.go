@@ -1,5 +1,5 @@
-// Package raymond provides handlebars evaluation
-package raymond
+// Package mario provides handlebars evaluation
+package mario
 
 // Render parses a template and evaluates it with given context
 //

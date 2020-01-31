@@ -1,62 +1,63 @@
-# raymond [![Build Status](https://secure.travis-ci.org/aymerick/raymond.svg?branch=master)](http://travis-ci.org/aymerick/raymond) [![GoDoc](https://godoc.org/github.com/aymerick/raymond?status.svg)](http://godoc.org/github.com/aymerick/raymond)
+# Mario 
 
-Handlebars for [golang](https://golang.org) with the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
+[![Build Status](https://secure.travis-ci.org/aymerick/mario.svg?branch=master)](http://travis-ci.org/aymerick/mario) [![GoDoc](https://godoc.org/github.com/imantung/mario?status.svg)](http://godoc.org/github.com/imantung/mario)
 
-The full API documentation is available here: <http://godoc.org/github.com/aymerick/raymond>.
+Successor of [raymond](https://github.com/aymerick/raymond). Handlebars for [golang](https://golang.org) with the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
 
-![Raymond Logo](https://github.com/aymerick/raymond/blob/master/raymond.png?raw=true "Raymond")
-
+<img src="mario.jpeg?raw=true">
 
 # Table of Contents
 
-- [Quick Start](#quick-start)
-- [Correct Usage](#correct-usage)
-- [Context](#context)
-- [HTML Escaping](#html-escaping)
-- [Helpers](#helpers)
-  - [Template Helpers](#template-helpers)
-  - [Built-In Helpers](#built-in-helpers)
-    - [The `if` block helper](#the-if-block-helper)
-    - [The `unless` block helper](#the-unless-block-helper)
-    - [The `each` block helper](#the-each-block-helper)
-    - [The `with` block helper](#the-with-block-helper)
-    - [The `lookup` helper](#the-lookup-helper)
-    - [The `log` helper](#the-log-helper)
-    - [The `equal` helper](#the-equal-helper)
-  - [Block Helpers](#block-helpers)
-    - [Block Evaluation](#block-evaluation)
-    - [Conditional](#conditional)
-    - [Else Block Evaluation](#else-block-evaluation)
-    - [Block Parameters](#block-parameters)
-  - [Helper Parameters](#helper-parameters)
-    - [Automatic conversion](#automatic-conversion)
-  - [Options Argument](#options-argument)
-    - [Context Values](#context-values)
-    - [Helper Hash Arguments](#helper-hash-arguments)
-    - [Private Data](#private-data)
-  - [Utilites](#utilites)
-    - [`Str()`](#str)
-    - [`IsTrue()`](#istrue)
-- [Context Functions](#context-functions)
-- [Partials](#partials)
-  - [Template Partials](#template-partials)
-  - [Global Partials](#global-partials)
-  - [Dynamic Partials](#dynamic-partials)
-  - [Partial Contexts](#partial-contexts)
-  - [Partial Parameters](#partial-parameters)
-- [Utility Functions](#utility-functions)
-- [Mustache](#mustache)
-- [Limitations](#limitations)
-- [Handlebars Lexer](#handlebars-lexer)
-- [Handlebars Parser](#handlebars-parser)
-- [Test](#test)
-- [References](#references)
-- [Others Implementations](#others-implementations)
+- [Mario](#mario)
+- [Table of Contents](#table-of-contents)
+  - [Quick Start](#quick-start)
+  - [Correct Usage](#correct-usage)
+  - [Context](#context)
+  - [HTML Escaping](#html-escaping)
+  - [Helpers](#helpers)
+    - [Template Helpers](#template-helpers)
+    - [Built-In Helpers](#built-in-helpers)
+      - [The `if` block helper](#the-if-block-helper)
+      - [The `unless` block helper](#the-unless-block-helper)
+      - [The `each` block helper](#the-each-block-helper)
+      - [The `with` block helper](#the-with-block-helper)
+      - [The `lookup` helper](#the-lookup-helper)
+      - [The `log` helper](#the-log-helper)
+      - [The `equal` helper](#the-equal-helper)
+    - [Block Helpers](#block-helpers)
+      - [Block Evaluation](#block-evaluation)
+      - [Conditional](#conditional)
+      - [Else Block Evaluation](#else-block-evaluation)
+      - [Block Parameters](#block-parameters)
+    - [Helper Parameters](#helper-parameters)
+      - [Automatic conversion](#automatic-conversion)
+    - [Options Argument](#options-argument)
+      - [Context Values](#context-values)
+      - [Helper Hash Arguments](#helper-hash-arguments)
+      - [Private Data](#private-data)
+    - [Utilites](#utilites)
+      - [`Str()`](#str)
+      - [`IsTrue()`](#istrue)
+  - [Context Functions](#context-functions)
+  - [Partials](#partials)
+    - [Template Partials](#template-partials)
+    - [Global Partials](#global-partials)
+    - [Dynamic Partials](#dynamic-partials)
+    - [Partial Contexts](#partial-contexts)
+    - [Partial Parameters](#partial-parameters)
+  - [Utility Functions](#utility-functions)
+  - [Mustache](#mustache)
+  - [Limitations](#limitations)
+  - [Handlebars Lexer](#handlebars-lexer)
+  - [Handlebars Parser](#handlebars-parser)
+  - [Test](#test)
+  - [References](#references)
+  - [Others Implementations](#others-implementations)
 
 
 ## Quick Start
 
-    $ go get github.com/aymerick/raymond
+    $ go get github.com/imantung/mario
 
 The quick and dirty way of rendering a handlebars template:
 
@@ -66,7 +67,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond"
+    "github.com/imantung/mario"
 )
 
 func main() {
@@ -83,7 +84,7 @@ func main() {
         "body":  "This is my first post!",
     }
 
-    result, err := raymond.Render(tpl, ctx)
+    result, err := mario.Render(tpl, ctx)
     if err != nil {
         panic("Please report a bug :)")
     }
@@ -116,7 +117,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond"
+    "github.com/imantung/mario"
 )
 
 func main() {
@@ -140,7 +141,7 @@ func main() {
     }
 
     // parse template
-    tpl, err := raymond.Parse(source)
+    tpl, err := mario.Parse(source)
     if err != nil {
         panic(err)
     }
@@ -179,7 +180,7 @@ You can use `MustParse()` and `MustExec()` functions if you don't want to deal w
 
 ```go
 // parse template
-tpl := raymond.MustParse(source)
+tpl := mario.MustParse(source)
 
 // render template
 result := tpl.MustExec(ctx)
@@ -200,7 +201,7 @@ package main
 import (
   "fmt"
 
-  "github.com/aymerick/raymond"
+  "github.com/imantung/mario"
 )
 
 func main() {
@@ -243,7 +244,7 @@ func main() {
         },
     }
 
-    output := raymond.MustRender(source, ctx)
+    output := mario.MustRender(source, ctx)
 
     fmt.Print(output)
 }
@@ -281,7 +282,7 @@ ctx := map[string]string{
     "body":  "<p>This is a post about &lt;p&gt; tags</p>",
 }
 
-tpl := raymond.MustParse(source)
+tpl := mario.MustParse(source)
 result := tpl.MustExec(ctx)
 
 fmt.Print(result)
@@ -301,11 +302,11 @@ Output:
 When returning HTML from a helper, you should return a `SafeString` if you don't want it to be escaped by default. When using `SafeString` all unknown or unsafe data should be manually escaped with the `Escape` method.
 
 ```go
-raymond.RegisterHelper("link", func(url, text string) raymond.SafeString {
-    return raymond.SafeString("<a href='" + raymond.Escape(url) + "'>" + raymond.Escape(text) + "</a>")
+mario.RegisterHelper("link", func(url, text string) mario.SafeString {
+    return mario.SafeString("<a href='" + mario.Escape(url) + "'>" + mario.Escape(text) + "</a>")
 })
 
-tpl := raymond.MustParse("{{link url text}}")
+tpl := mario.MustParse("{{link url text}}")
 
 ctx := map[string]string{
     "url":  "http://www.aymerick.com/",
@@ -355,7 +356,7 @@ ctx := map[string]interface{}{
     }},
 }
 
-raymond.RegisterHelper("fullName", func(person map[string]string) string {
+mario.RegisterHelper("fullName", func(person map[string]string) string {
     return person["firstName"] + " " + person["lastName"]
 })
 ```
@@ -422,7 +423,7 @@ ctx := Post{
     },
 }
 
-raymond.RegisterHelper("fullName", func(person Person) string {
+mario.RegisterHelper("fullName", func(person Person) string {
     return person.FirstName + " " + person.LastName
 })
 ```
@@ -430,11 +431,11 @@ raymond.RegisterHelper("fullName", func(person Person) string {
 You can unregister global helpers with `RemoveHelper` and `RemoveAllHelpers` functions:
 
 ```go
-raymond.RemoveHelper("fullname")
+mario.RemoveHelper("fullname")
 ```
 
 ```go
-raymond.RemoveAllHelpers()
+mario.RemoveAllHelpers()
 ```
 
 
@@ -443,7 +444,7 @@ raymond.RemoveAllHelpers()
 You can register a helper on a specific template, and in that case that helper will be available to that template only:
 
 ```go
-tpl := raymond.MustParse("User: {{fullName user.firstName user.lastName}}")
+tpl := mario.MustParse("User: {{fullName user.firstName user.lastName}}")
 
 tpl.RegisterHelper("fullName", func(firstName, lastName string) string {
   return firstName + " " + lastName
@@ -458,7 +459,7 @@ Those built-in helpers are available to all templates.
 
 #### The `if` block helper
 
-You can use the `if` helper to conditionally render a block. If its argument returns `false`, `nil`, `0`, `""`, an empty array, an empty slice or an empty map, then raymond will not render the block.
+You can use the `if` helper to conditionally render a block. If its argument returns `false`, `nil`, `0`, `""`, an empty array, an empty slice or an empty map, then mario will not render the block.
 
 ```html
 <div class="entry">
@@ -709,8 +710,8 @@ As an example, let's define a block helper that adds some markup to the wrapped 
 The `bold` helper will add markup to make its text bold.
 
 ```go
-raymond.RegisterHelper("bold", func(options *raymond.Options) raymond.SafeString {
-    return raymond.SafeString(`<div class="mybold">` + options.Fn() + "</div>")
+mario.RegisterHelper("bold", func(options *mario.Options) mario.SafeString {
+    return mario.SafeString(`<div class="mybold">` + options.Fn() + "</div>")
 })
 ```
 
@@ -719,7 +720,7 @@ A helper evaluates the block content with current context by calling `options.Fn
 If you want to evaluate the block with another context, then use `options.FnWith(ctx)`, like this french version of built-in `with` block helper:
 
 ```go
-raymond.RegisterHelper("avec", func(context interface{}, options *raymond.Options) string {
+mario.RegisterHelper("avec", func(context interface{}, options *mario.Options) string {
     return options.FnWith(context)
 })
 ```
@@ -740,7 +741,7 @@ source := `{{#si yep}}YEP !{{/si}}`
 
 ctx := map[string]interface{}{"yep": true}
 
-raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) string {
+mario.RegisterHelper("si", func(conditional bool, options *mario.Options) string {
     if conditional {
         return options.Fn()
     }
@@ -766,7 +767,7 @@ source := `{{#si yep}}YEP !{{else}}NOP !{{/si}}`
 
 ctx := map[string]interface{}{"yep": false}
 
-raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) string {
+mario.RegisterHelper("si", func(conditional bool, options *mario.Options) string {
     if conditional {
         return options.Fn()
     }
@@ -871,7 +872,7 @@ Outputs:
 
 ### Helper Parameters
 
-When calling a helper in a template, raymond expects the same number of arguments as the number of helper function parameters.
+When calling a helper in a template, mario expects the same number of arguments as the number of helper function parameters.
 
 So this template:
 
@@ -882,7 +883,7 @@ So this template:
 With this helper:
 
 ```go
-raymond.RegisterHelper("add", func(val1, val2 int) string {
+mario.RegisterHelper("add", func(val1, val2 int) string {
     return strconv.Itoa(val1 + val2)
 })
 ```
@@ -902,7 +903,7 @@ ctx := map[string]interface{}{
     "b": "Valjean",
 }
 
-raymond.RegisterHelper("concat", func(val1, val2 string) string {
+mario.RegisterHelper("concat", func(val1, val2 string) string {
     return val1 + " " + val2
 })
 ```
@@ -922,7 +923,7 @@ ctx := map[string]interface{}{
 }
 ```
 
-Actually, raymond perfoms automatic string conversion. So because the first parameter of the helper is typed as `string`, the first argument will be converted from the `10` integer to `"10"`, and the helper outputs:
+Actually, mario perfoms automatic string conversion. So because the first parameter of the helper is typed as `string`, the first argument will be converted from the `10` integer to `"10"`, and the helper outputs:
 
 ```html
 10 VALJEAN
@@ -936,7 +937,7 @@ Note that this kind of automatic conversion is done with `bool` type too, thanks
 If a helper needs the `Options` argument, just add it at the end of helper parameters:
 
 ```go
-raymond.RegisterHelper("add", func(val1, val2 int, options *raymond.Options) string {
+mario.RegisterHelper("add", func(val1, val2 int, options *mario.Options) string {
     return strconv.Itoa(val1 + val2) + " " + options.ValueStr("bananas")
 })
 ```
@@ -963,7 +964,7 @@ ctx := map[string]interface{}{
     "suffix": "FOREVER !",
 }
 
-raymond.RegisterHelper("concat", func(val1, val2 string, options *raymond.Options) string {
+mario.RegisterHelper("concat", func(val1, val2 string, options *mario.Options) string {
     return val1 + " " + val2 + " " + options.ValueStr("suffix")
 })
 ```
@@ -994,7 +995,7 @@ ctx := map[string]interface{}{
     "suffix": "FOREVER !",
 }
 
-raymond.RegisterHelper("concat", func(suffix string, options *raymond.Options) string {
+mario.RegisterHelper("concat", func(suffix string, options *mario.Options) string {
     return options.HashStr("first") + " " + options.HashStr("second") + " " + suffix
 })
 ```
@@ -1027,7 +1028,7 @@ ctx := map[string]interface{}{
     "a": "awesome",
 }
 
-raymond.RegisterHelper("voodoo", func(options *raymond.Options) string {
+mario.RegisterHelper("voodoo", func(options *mario.Options) string {
     // create data frame with @magix data
     frame := options.NewDataFrame()
     frame.Set("magix", options.HashProp("kind"))
@@ -1042,7 +1043,7 @@ Helpers that need to evaluate the block with a private data frame and a new cont
 
 ### Utilites
 
-In addition to `Escape()`, raymond provides utility functions that can be usefull for helpers.
+In addition to `Escape()`, mario provides utility functions that can be usefull for helpers.
 
 
 #### `Str()`
@@ -1052,28 +1053,28 @@ In addition to `Escape()`, raymond provides utility functions that can be useful
 Booleans:
 
 ```go
-raymond.Str(3) + " foos and " + raymond.Str(-1.25) + " bars"
+mario.Str(3) + " foos and " + mario.Str(-1.25) + " bars"
 // Outputs: "3 foos and -1.25 bars"
 ```
 
 Numbers:
 
 ``` go
-"everything is " + raymond.Str(true) + " and nothing is " + raymond.Str(false)
+"everything is " + mario.Str(true) + " and nothing is " + mario.Str(false)
 // Outputs: "everything is true and nothing is false"
 ```
 
 Maps:
 
 ```go
-raymond.Str(map[string]string{"foo": "bar"})
+mario.Str(map[string]string{"foo": "bar"})
 // Outputs: "map[foo:bar]"
 ```
 
 Arrays and Slices:
 
 ```go
-raymond.Str([]interface{}{true, 10, "foo", 5, "bar"})
+mario.Str([]interface{}{true, 10, "foo", 5, "bar"})
 // Outputs: "true10foo5bar"
 ```
 
@@ -1126,7 +1127,7 @@ Those context functions behave like helper functions: they can be called with pa
 You can register template partials before execution:
 
 ```go
-tpl := raymond.MustParse("{{> foo}} baz")
+tpl := mario.MustParse("{{> foo}} baz")
 tpl.RegisterPartial("foo", "<span>bar</span>")
 
 result := tpl.MustExec(nil)
@@ -1142,7 +1143,7 @@ Output:
 You can register several partials at once:
 
 ```go
-tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
+tpl := mario.MustParse("{{> foo}} and {{> baz}}")
 tpl.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
@@ -1164,9 +1165,9 @@ Output:
 You can registers global partials that will be accessible by all templates:
 
 ```go
-raymond.RegisterPartial("foo", "<span>bar</span>")
+mario.RegisterPartial("foo", "<span>bar</span>")
 
-tpl := raymond.MustParse("{{> foo}} baz")
+tpl := mario.MustParse("{{> foo}} baz")
 result := tpl.MustExec(nil)
 fmt.Print(result)
 ```
@@ -1174,12 +1175,12 @@ fmt.Print(result)
 Or:
 
 ```go
-raymond.RegisterPartials(map[string]string{
+mario.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
 })
 
-tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
+tpl := mario.MustParse("{{> foo}} and {{> baz}}")
 result := tpl.MustExec(nil)
 fmt.Print(result)
 ```
@@ -1192,7 +1193,7 @@ It's possible to dynamically select the partial to be executed by using sub expr
 For example, that template randomly evaluates the `foo` or `baz` partial:
 
 ```go
-tpl := raymond.MustParse("{{> (whichPartial) }}")
+tpl := mario.MustParse("{{> (whichPartial) }}")
 tpl.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
@@ -1219,7 +1220,7 @@ It's possible to execute partials on a custom context by passing in the context 
 For example:
 
 ```go
-tpl := raymond.MustParse("User: {{> userDetails user }}")
+tpl := mario.MustParse("User: {{> userDetails user }}")
 tpl.RegisterPartial("userDetails", "{{firstname}} {{lastname}}")
 
 ctx := map[string]interface{}{
@@ -1247,7 +1248,7 @@ Custom data can be passed to partials through hash parameters.
 For example:
 
 ```go
-tpl := raymond.MustParse("{{> myPartial name=hero }}")
+tpl := mario.MustParse("{{> myPartial name=hero }}")
 tpl.RegisterPartial("myPartial", "My hero is {{name}}")
 
 ctx := map[string]interface{}{
@@ -1315,7 +1316,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond/lexer"
+    "github.com/imantung/mario/lexer"
 )
 
 func main() {
@@ -1357,8 +1358,8 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond/ast"
-    "github.com/aymerick/raymond/parser"
+    "github.com/imantung/mario/ast"
+    "github.com/imantung/mario/parser"
 )
 
 fu  nc main() {
