@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/imantung/mario"
+	"github.com/stretchr/testify/require"
 )
 
 var evalTests = []Test{
@@ -155,7 +156,7 @@ func TestEvalStruct(t *testing.T) {
 		Comments []Comment
 	}
 
-	ctx := Post{
+	data := Post{
 		Person{"Jean", "Valjean"},
 		"Life is difficult",
 		[]Comment{
@@ -166,10 +167,9 @@ func TestEvalStruct(t *testing.T) {
 		},
 	}
 
-	output := mario.MustRender(source, ctx)
-	if output != expected {
-		t.Errorf("Failed to evaluate with struct context")
-	}
+	output, err := mario.Must(mario.New().Parse(source)).Exec(data)
+	require.NoError(t, err)
+	require.Equal(t, expected, output)
 }
 
 func TestEvalStructTag(t *testing.T) {
@@ -214,7 +214,7 @@ func TestEvalStructTag(t *testing.T) {
 		Aliases  []Alias `handlebars:"other-names"`
 	}
 
-	ctx := Character{
+	data := Character{
 		"Lebowski",
 		CharacterInfo{"Venice", "Tied The Room Together", "Bowling"},
 		[]Alias{
@@ -223,10 +223,9 @@ func TestEvalStructTag(t *testing.T) {
 		},
 	}
 
-	output := mario.MustRender(source, ctx)
-	if output != expected {
-		t.Errorf("Failed to evaluate with struct tag context")
-	}
+	output, err := mario.Must(mario.New().Parse(source)).Exec(data)
+	require.NoError(t, err)
+	require.Equal(t, expected, output)
 }
 
 type TestFoo struct {
@@ -238,16 +237,11 @@ func (t *TestFoo) Subject() string {
 
 func TestEvalMethod(t *testing.T) {
 	t.Parallel()
+	output, err := mario.Must(mario.New().Parse(`Subject is {{subject}}! YES I SAID {{Subject}}!`)).
+		Exec(&TestFoo{})
+	require.NoError(t, err)
+	require.Equal(t, `Subject is foo! YES I SAID foo!`, output)
 
-	source := `Subject is {{subject}}! YES I SAID {{Subject}}!`
-	expected := `Subject is foo! YES I SAID foo!`
-
-	ctx := &TestFoo{}
-
-	output := mario.MustRender(source, ctx)
-	if output != expected {
-		t.Errorf("Failed to evaluate struct method: %s", output)
-	}
 }
 
 type TestBar struct {
@@ -267,10 +261,10 @@ func TestEvalMethodReturningFunc(t *testing.T) {
 	source := `Subject is {{subject}}! YES I SAID {{Subject}}!`
 	expected := `Subject is bar! YES I SAID bar!`
 
-	ctx := &TestBar{}
+	data := &TestBar{}
 
-	output := mario.MustRender(source, ctx)
-	if output != expected {
-		t.Errorf("Failed to evaluate struct method: %s", output)
-	}
+	output, err := mario.Must(mario.New().Parse(source)).Exec(data)
+	require.NoError(t, err)
+	require.Equal(t, expected, output)
+
 }
