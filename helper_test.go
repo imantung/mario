@@ -1,6 +1,10 @@
-package mario
+package mario_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/imantung/mario"
+)
 
 const (
 	VERBOSE = false
@@ -10,7 +14,7 @@ const (
 // Helpers
 //
 
-func barHelper(options *Options) string { return "bar" }
+func barHelper(options *mario.Options) string { return "bar" }
 
 func echoHelper(str string, nb int) string {
 	result := ""
@@ -233,13 +237,13 @@ func TestHelper(t *testing.T) {
 }
 
 func TestRemoveHelper(t *testing.T) {
-	RegisterHelper("testremovehelper", func() string { return "" })
-	if _, ok := helpers["testremovehelper"]; !ok {
+	mario.RegisterHelper("testremovehelper", func() string { return "" })
+	if _, ok := mario.Helpers()["testremovehelper"]; !ok {
 		t.Error("Failed to register global helper")
 	}
 
-	RemoveHelper("testremovehelper")
-	if _, ok := helpers["testremovehelper"]; ok {
+	mario.RemoveHelper("testremovehelper")
+	if _, ok := mario.Helpers()["testremovehelper"]; ok {
 		t.Error("Failed to remove global helper")
 	}
 }
@@ -254,19 +258,16 @@ type Author struct {
 }
 
 func TestHelperCtx(t *testing.T) {
-	RegisterHelper("template", func(name string, options *Options) SafeString {
+	mario.RegisterHelper("template", func(name string, options *mario.Options) mario.SafeString {
 		context := options.Ctx()
 
 		template := name + " - {{ firstName }} {{ lastName }}"
-		result, _ := Render(template, context)
+		result, _ := mario.Render(template, context)
 
-		return SafeString(result)
+		return mario.SafeString(result)
 	})
 
-	template := `By {{ template "namefile" }}`
-	context := Author{"Alan", "Johnson"}
-
-	result, _ := Render(template, context)
+	result, _ := mario.Render(`By {{ template "namefile" }}`, Author{"Alan", "Johnson"})
 	if result != "By namefile - Alan Johnson" {
 		t.Errorf("Failed to render template in helper: %q", result)
 	}

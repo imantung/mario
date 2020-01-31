@@ -8,7 +8,7 @@ import (
 )
 
 func TestEscape(t *testing.T) {
-	tpl, err := mario.Parse("{{link url text}}")
+	tpl, err := mario.New().Parse("{{link url text}}")
 	require.NoError(t, err)
 
 	tpl.RegisterHelper("link", func(url string, text string) mario.SafeString {

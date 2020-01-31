@@ -1,4 +1,4 @@
-package mario
+package mario_test
 
 import (
 	"io/ioutil"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/imantung/mario"
 	"gopkg.in/yaml.v2"
 )
 
@@ -160,7 +161,7 @@ var mustacheLambdasTests = []Test{
 		"{{lambda}} == {{{lambda}}} == {{lambda}}",
 		map[string]interface{}{"lambda": func() string {
 			musTestLambdaInterMult++
-			return Str(musTestLambdaInterMult)
+			return mario.Str(musTestLambdaInterMult)
 		}},
 		nil, nil, nil,
 		"1 == 2 == 3",
@@ -205,7 +206,7 @@ var mustacheLambdasTests = []Test{
 	{
 		"Section - Multiple Calls",
 		"{{#lambda}}FILE{{/lambda}} != {{#lambda}}LINE{{/lambda}}",
-		map[string]interface{}{"lambda": func(options *Options) string {
+		map[string]interface{}{"lambda": func(options *mario.Options) string {
 			return "__" + options.Fn() + "__"
 		}},
 		nil, nil, nil,

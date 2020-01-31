@@ -6,7 +6,7 @@ package mario
 // Note that this function call is not optimal as your template is parsed everytime you call it. You should use Parse() function instead.
 func Render(source string, data interface{}) (s string, err error) {
 	var tpl *Template
-	if tpl, err = Parse(source); err != nil {
+	if tpl, err = New().Parse(source); err != nil {
 		return "", err
 	}
 	return tpl.Exec(data)

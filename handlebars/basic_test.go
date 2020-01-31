@@ -633,7 +633,7 @@ func TestBasicErrors(t *testing.T) {
 	expectedError := regexp.QuoteMeta("Invalid path: text/this")
 
 	for _, input := range inputs {
-		_, err = mario.Parse(input)
+		_, err = mario.New().Parse(input)
 		if err == nil {
 			t.Errorf("Test failed - Error expected")
 		}

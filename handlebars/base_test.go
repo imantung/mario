@@ -2,15 +2,17 @@ package handlebars
 
 import (
 	"fmt"
+
 	"io/ioutil"
 	"path"
 	"strconv"
 	"testing"
 
 	"github.com/imantung/mario"
+	"github.com/imantung/mario/ast"
 )
 
-// cf. https://github.com/aymerick/go-fuzz-tests/mario
+// cf. https://github.com/aymerick/go-fuzz-tests/raymond
 const dumpTpl = false
 
 var dumpTplNb = 0
@@ -41,7 +43,7 @@ func launchTests(t *testing.T, tests []Test) {
 		}
 
 		// parse template
-		tpl, err = mario.Parse(test.input)
+		tpl, err = mario.New().Parse(test.input)
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
 		} else {
@@ -67,7 +69,7 @@ func launchTests(t *testing.T, tests []Test) {
 			// render template
 			output, err := tpl.ExecWith(test.data, privData)
 			if err != nil {
-				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, mario.Str(test.data), err, tpl.PrintAST())
+				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, mario.Str(test.data), err, ast.Print(tpl.Program()))
 			} else {
 				// check output
 				var expectedArr []string
@@ -82,7 +84,7 @@ func launchTests(t *testing.T, tests []Test) {
 					}
 
 					if !match {
-						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, mario.Str(test.data), mario.Str(test.partials), expectedArr, output, tpl.PrintAST())
+						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, mario.Str(test.data), mario.Str(test.partials), expectedArr, output, ast.Print(tpl.Program()))
 					}
 				} else {
 					expectedStr, ok := test.output.(string)
@@ -91,7 +93,7 @@ func launchTests(t *testing.T, tests []Test) {
 					}
 
 					if expectedStr != output {
-						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, mario.Str(test.data), mario.Str(test.partials), expectedStr, output, tpl.PrintAST())
+						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, mario.Str(test.data), mario.Str(test.partials), expectedStr, output, ast.Print(tpl.Program()))
 					}
 				}
 			}

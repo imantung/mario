@@ -91,7 +91,7 @@ func (p *partial) template() (*Template, error) {
 	if p.tpl == nil {
 		var err error
 
-		p.tpl, err = Parse(p.source)
+		p.tpl, err = New().Parse(p.source)
 		if err != nil {
 			return nil, err
 		}

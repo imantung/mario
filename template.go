@@ -13,18 +13,29 @@ import (
 
 // Template represents a handlebars template.
 type Template struct {
-	source   string
 	program  *ast.Program
 	helpers  map[string]reflect.Value
-	Partials map[string]*partial
+	partials map[string]*partial
 	mutex    sync.RWMutex // protects helpers and partials
 }
 
-// Parse instanciates a template by parsing given source.
-func Parse(source string) (*Template, error) {
-	tpl := newTemplate(source)
-	err := tpl.parse()
-	return tpl, err
+// New mustache handlebars template
+func New() *Template {
+	return &Template{
+		helpers:  make(map[string]reflect.Value),
+		partials: make(map[string]*partial),
+	}
+}
+
+// Parse the template
+func (tpl *Template) Parse(source string) (*Template, error) {
+	var program *ast.Program
+	var err error
+	if program, err = parser.Parse(source); err != nil {
+		return nil, err
+	}
+	tpl.program = program
+	return tpl, nil
 }
 
 // ParseFile reads given file and returns parsed template.
@@ -33,8 +44,7 @@ func ParseFile(filePath string) (*Template, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return Parse(string(b))
+	return New().Parse(string(b))
 }
 
 // Exec evaluates template with given context.
@@ -46,11 +56,6 @@ func (tpl *Template) Exec(ctx interface{}) (result string, err error) {
 func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result string, err error) {
 	defer errRecover(&err)
 
-	// parses template if necessary
-	if err = tpl.parse(); err != nil {
-		return
-	}
-
 	// setup visitor
 	v := newEvalVisitor(tpl, ctx, privData)
 
@@ -59,26 +64,6 @@ func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result stri
 
 	// named return values
 	return
-}
-
-// Clone returns a copy of that template.
-func (tpl *Template) Clone() *Template {
-	result := newTemplate(tpl.source)
-
-	result.program = tpl.program
-
-	tpl.mutex.RLock()
-	defer tpl.mutex.RUnlock()
-
-	for name, helper := range tpl.helpers {
-		result.RegisterHelper(name, helper.Interface())
-	}
-
-	for name, partial := range tpl.Partials {
-		result.addPartial(name, partial.source, partial.tpl)
-	}
-
-	return result
 }
 
 // RegisterHelper registers a helper for that template.
@@ -144,47 +129,27 @@ func (tpl *Template) RegisterPartialTemplate(name string, template *Template) {
 	tpl.addPartial(name, "", template)
 }
 
-// PrintAST returns string representation of parsed template.
-func (tpl *Template) PrintAST() string {
-	if err := tpl.parse(); err != nil {
-		return fmt.Sprintf("PARSER ERROR: %s", err)
-	}
-	return ast.Print(tpl.program)
-}
-
-func newTemplate(source string) *Template {
-	return &Template{
-		source:   source,
-		helpers:  make(map[string]reflect.Value),
-		Partials: make(map[string]*partial),
-	}
-}
-
-func (tpl *Template) parse() (err error) {
-	if tpl.program == nil {
-		if tpl.program, err = parser.Parse(tpl.source); err != nil {
-			return
-		}
-	}
-	return
+// Program return program
+func (tpl *Template) Program() *ast.Program {
+	return tpl.program
 }
 
 func (tpl *Template) addPartial(name string, source string, template *Template) {
 	tpl.mutex.Lock()
 	defer tpl.mutex.Unlock()
 
-	if tpl.Partials[name] != nil {
+	if tpl.partials[name] != nil {
 		panic(fmt.Sprintf("Partial %s already registered", name))
 	}
 
-	tpl.Partials[name] = newPartial(name, source, template)
+	tpl.partials[name] = newPartial(name, source, template)
 }
 
 func (tpl *Template) findPartial(name string) *partial {
 	tpl.mutex.RLock()
 	defer tpl.mutex.RUnlock()
 
-	return tpl.Partials[name]
+	return tpl.partials[name]
 }
 
 func errRecover(errp *error) {
@@ -204,6 +169,5 @@ func errRecover(errp *error) {
 func (tpl *Template) findHelper(name string) reflect.Value {
 	tpl.mutex.RLock()
 	defer tpl.mutex.RUnlock()
-
 	return tpl.helpers[name]
 }

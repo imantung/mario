@@ -1,9 +1,13 @@
-package mario
+package mario_test
 
 import (
 	"fmt"
+
 	"regexp"
 	"testing"
+
+	"github.com/imantung/mario"
+	"github.com/imantung/mario/ast"
 )
 
 type Test struct {
@@ -21,11 +25,13 @@ func launchTests(t *testing.T, tests []Test) {
 	// t.Parallel()
 
 	for _, test := range tests {
-		var err error
-		var tpl *Template
+		var (
+			err error
+			tpl *mario.Template
+		)
 
 		// parse template
-		tpl, err = Parse(test.input)
+		tpl, err = mario.New().Parse(test.input)
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
 		} else {
@@ -40,9 +46,9 @@ func launchTests(t *testing.T, tests []Test) {
 			}
 
 			// setup private data frame
-			var privData *DataFrame
+			var privData *mario.DataFrame
 			if test.privData != nil {
-				privData = NewDataFrame()
+				privData = mario.NewDataFrame()
 				for k, v := range test.privData {
 					privData.Set(k, v)
 				}
@@ -51,7 +57,7 @@ func launchTests(t *testing.T, tests []Test) {
 			// render template
 			output, err := tpl.ExecWith(test.data, privData)
 			if err != nil {
-				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, Str(test.data), err, tpl.PrintAST())
+				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, mario.Str(test.data), err, ast.Print(tpl.Program()))
 			} else {
 				// check output
 				var expectedArr []string
@@ -66,7 +72,7 @@ func launchTests(t *testing.T, tests []Test) {
 					}
 
 					if !match {
-						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, Str(test.data), Str(test.partials), expectedArr, output, tpl.PrintAST())
+						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, mario.Str(test.data), mario.Str(test.partials), expectedArr, output, ast.Print(tpl.Program()))
 					}
 				} else {
 					expectedStr, ok := test.output.(string)
@@ -75,7 +81,7 @@ func launchTests(t *testing.T, tests []Test) {
 					}
 
 					if expectedStr != output {
-						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, Str(test.data), Str(test.partials), expectedStr, output, tpl.PrintAST())
+						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, mario.Str(test.data), mario.Str(test.partials), expectedStr, output, ast.Print(tpl.Program()))
 					}
 				}
 			}
@@ -87,11 +93,13 @@ func launchErrorTests(t *testing.T, tests []Test) {
 	t.Parallel()
 
 	for _, test := range tests {
-		var err error
-		var tpl *Template
+		var (
+			err error
+			tpl *mario.Template
+		)
 
 		// parse template
-		tpl, err = Parse(test.input)
+		tpl, err = mario.New().Parse(test.input)
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
 		} else {
@@ -106,9 +114,9 @@ func launchErrorTests(t *testing.T, tests []Test) {
 			}
 
 			// setup private data frame
-			var privData *DataFrame
+			var privData *mario.DataFrame
 			if test.privData != nil {
-				privData := NewDataFrame()
+				privData := mario.NewDataFrame()
 				for k, v := range test.privData {
 					privData.Set(k, v)
 				}
@@ -117,7 +125,7 @@ func launchErrorTests(t *testing.T, tests []Test) {
 			// render template
 			output, err := tpl.ExecWith(test.data, privData)
 			if err == nil {
-				t.Errorf("Test '%s' failed - Error expected\ninput:\n\t'%s'\ngot\n\t%q\nAST:\n%q", test.name, test.input, output, tpl.PrintAST())
+				t.Errorf("Test '%s' failed - Error expected\ninput:\n\t'%s'\ngot\n\t%q\nAST:\n%q", test.name, test.input, output, ast.Print(tpl.Program()))
 			} else {
 				var errMatch error
 				match := false
@@ -159,7 +167,7 @@ func launchErrorTests(t *testing.T, tests []Test) {
 				}
 
 				if !match {
-					t.Errorf("Test '%s' failed - Incorrect error returned\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q", test.name, test.input, Str(test.data), test.output, err)
+					t.Errorf("Test '%s' failed - Incorrect error returned\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q", test.name, test.input, mario.Str(test.data), test.output, err)
 				}
 			}
 		}

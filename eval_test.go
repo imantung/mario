@@ -1,6 +1,10 @@
-package mario
+package mario_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/imantung/mario"
+)
 
 var evalTests = []Test{
 	{
@@ -59,8 +63,8 @@ var evalTests = []Test{
 			"body":  "I have so many things to say!",
 		},
 		nil,
-		map[string]interface{}{"bold": func(options *Options) SafeString {
-			return SafeString(`<div class="mybold">` + options.Fn() + "</div>")
+		map[string]interface{}{"bold": func(options *mario.Options) mario.SafeString {
+			return mario.SafeString(`<div class="mybold">` + options.Fn() + "</div>")
 		}},
 		nil,
 		`My new blog post - <div class="mybold">I have so many things to say!</div>`,
@@ -162,7 +166,7 @@ func TestEvalStruct(t *testing.T) {
 		},
 	}
 
-	output := MustRender(source, ctx)
+	output := mario.MustRender(source, ctx)
 	if output != expected {
 		t.Errorf("Failed to evaluate with struct context")
 	}
@@ -219,7 +223,7 @@ func TestEvalStructTag(t *testing.T) {
 		},
 	}
 
-	output := MustRender(source, ctx)
+	output := mario.MustRender(source, ctx)
 	if output != expected {
 		t.Errorf("Failed to evaluate with struct tag context")
 	}
@@ -240,7 +244,7 @@ func TestEvalMethod(t *testing.T) {
 
 	ctx := &TestFoo{}
 
-	output := MustRender(source, ctx)
+	output := mario.MustRender(source, ctx)
 	if output != expected {
 		t.Errorf("Failed to evaluate struct method: %s", output)
 	}
@@ -265,7 +269,7 @@ func TestEvalMethodReturningFunc(t *testing.T) {
 
 	ctx := &TestBar{}
 
-	output := MustRender(source, ctx)
+	output := mario.MustRender(source, ctx)
 	if output != expected {
 		t.Errorf("Failed to evaluate struct method: %s", output)
 	}

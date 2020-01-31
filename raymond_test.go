@@ -16,7 +16,7 @@ func TestParse(t *testing.T) {
 	}
 
 	// parse template
-	tpl, err := mario.Parse(source)
+	tpl, err := mario.New().Parse(source)
 	require.NoError(t, err)
 
 	// evaluate template with context

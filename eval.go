@@ -724,7 +724,7 @@ func (v *evalVisitor) evalPartial(p *partial, node *ast.PartialStatement) string
 	}
 
 	// evaluate partial template
-	result, _ := partialTpl.program.Accept(v).(string)
+	result, _ := partialTpl.Program().Accept(v).(string)
 
 	// ident partial
 	result = indentLines(result, node.Indent)

@@ -34,6 +34,11 @@ func init() {
 	RegisterHelper("equal", equalHelper)
 }
 
+// Helpers to return helpers
+func Helpers() map[string]reflect.Value {
+	return helpers
+}
+
 // RegisterHelper registers a global helper. That helper will be available to all templates.
 func RegisterHelper(name string, helper interface{}) {
 	helpersMutex.Lock()
