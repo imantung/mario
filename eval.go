@@ -669,17 +669,6 @@ func (v *evaluator) helperOptions(node *ast.Expression) *Options {
 // Partials
 //
 
-// findPartial finds given partial
-func (v *evaluator) findPartial(name string) *partial {
-	// check template partials
-	if p, ok := v.partials[name]; ok {
-		return p
-	}
-
-	// check global partials
-	return findPartial(name)
-}
-
 // partialContext computes partial context
 func (v *evaluator) partialContext(node *ast.PartialStatement) reflect.Value {
 	if nb := len(node.Params); nb > 1 {
@@ -868,7 +857,7 @@ func (v *evaluator) VisitPartial(node *ast.PartialStatement) interface{} {
 		v.errorf("Unexpected partial name: %q", node.Name)
 	}
 
-	partial := v.findPartial(name)
+	partial := v.partials[name]
 	if partial == nil {
 		v.errorf("Partial not found: %s", name)
 	}
