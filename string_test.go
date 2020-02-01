@@ -50,12 +50,12 @@ array: true10foo5bar`, output)
 }
 
 func TestSafeString(t *testing.T) {
-	tpl, err := mario.New().Parse("{{em}}")
+	tpl, err := mario.New().
+		WithHelperFunc("em", func() mario.SafeString {
+			return mario.SafeString("<em>FOO BAR</em>")
+		}).
+		Parse("{{em}}")
 	require.NoError(t, err)
-
-	tpl.RegisterHelper("em", func() mario.SafeString {
-		return mario.SafeString("<em>FOO BAR</em>")
-	})
 
 	output, err := tpl.Execute(nil)
 	require.NoError(t, err)

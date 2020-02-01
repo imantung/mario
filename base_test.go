@@ -35,9 +35,8 @@ func launchTests(t *testing.T, tests []Test) {
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
 		} else {
-			if len(test.helpers) > 0 {
-				// register helpers
-				tpl.RegisterHelpers(test.helpers)
+			for name, fn := range test.helpers {
+				tpl.WithHelperFunc(name, fn)
 			}
 
 			if len(test.partials) > 0 {
@@ -103,9 +102,8 @@ func launchErrorTests(t *testing.T, tests []Test) {
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
 		} else {
-			if len(test.helpers) > 0 {
-				// register helpers
-				tpl.RegisterHelpers(test.helpers)
+			for name, fn := range test.helpers {
+				tpl.WithHelperFunc(name, fn)
 			}
 
 			if len(test.partials) > 0 {

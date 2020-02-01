@@ -22,7 +22,15 @@ type Template struct {
 // New mustache handlebars template
 func New() *Template {
 	return &Template{
-		helpers:  make(map[string]*Helper),
+		helpers: map[string]*Helper{
+			"if":     ifHelper,
+			"unless": unlessHelper,
+			"with":   withHelper,
+			"each":   eachHelper,
+			"log":    logHelper,
+			"lookup": lookupHelper,
+			"equal":  equalHelper,
+		},
 		partials: make(map[string]*partial),
 	}
 }
@@ -55,40 +63,29 @@ func (tpl *Template) Execute(ctx interface{}) (result string, err error) {
 // ExecuteWith evaluates template with given context and private data frame.
 func (tpl *Template) ExecuteWith(ctx interface{}, frame *DataFrame) (result string, err error) {
 	defer errRecover(&err)
-
 	if frame == nil {
 		frame = NewDataFrame()
 	}
-
-	// setup visitor
-	visitor := &evaluator{
+	eval := &evaluator{
 		helpers:   tpl.helpers,
 		partials:  tpl.partials,
 		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
 		dataFrame: frame,
 		exprFunc:  make(map[*ast.Expression]bool),
 	}
-
-	// visit AST
-	result, _ = tpl.program.Accept(visitor).(string)
-
-	// named return values
+	result, _ = tpl.program.Accept(eval).(string)
 	return
 }
 
-// RegisterHelper registers a helper for that template.
-func (tpl *Template) RegisterHelper(name string, fn interface{}) {
-	tpl.mutex.Lock()
-	defer tpl.mutex.Unlock()
-
-	tpl.helpers[name] = CreateHelper(fn)
+// WithHelperFunc to create and set helper
+func (tpl *Template) WithHelperFunc(name string, fn interface{}) *Template {
+	return tpl.WithHelper(name, CreateHelper(fn))
 }
 
-// RegisterHelpers registers several helpers for that template.
-func (tpl *Template) RegisterHelpers(helpers map[string]interface{}) {
-	for name, helper := range helpers {
-		tpl.RegisterHelper(name, helper)
-	}
+// WithHelper to set helper
+func (tpl *Template) WithHelper(name string, helper *Helper) *Template {
+	tpl.helpers[name] = helper
+	return tpl
 }
 
 // RegisterPartial registers a partial for that template.

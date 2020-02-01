@@ -5,23 +5,18 @@ import (
 	"reflect"
 )
 
-// buildinHelpers stores buildin helpers
-var buildinHelpers = map[string]*Helper{
-	"if":     CreateHelper(ifHelper),
-	"unless": CreateHelper(unlessHelper),
-	"with":   CreateHelper(withHelper),
-	"each":   CreateHelper(eachHelper),
-	"log":    CreateHelper(logHelper),
-	"lookup": CreateHelper(lookupHelper),
-	"equal":  CreateHelper(equalHelper),
-}
+var (
+	ifHelper     = CreateHelper(If)
+	unlessHelper = CreateHelper(Unless)
+	withHelper   = CreateHelper(With)
+	eachHelper   = CreateHelper(Each)
+	logHelper    = CreateHelper(Log)
+	lookupHelper = CreateHelper(Lookup)
+	equalHelper  = CreateHelper(Equal)
+)
 
-//
-// Builtin helpers
-//
-
-// #if block helper
-func ifHelper(conditional interface{}, options *Options) interface{} {
+// If is build-in helper function for if
+func If(conditional interface{}, options *Options) interface{} {
 	if options.isIncludableZero() || IsTrue(conditional) {
 		return options.Fn()
 	}
@@ -29,8 +24,8 @@ func ifHelper(conditional interface{}, options *Options) interface{} {
 	return options.Inverse()
 }
 
-// #unless block helper
-func unlessHelper(conditional interface{}, options *Options) interface{} {
+// Unless is build-in helper function for unless
+func Unless(conditional interface{}, options *Options) interface{} {
 	if options.isIncludableZero() || IsTrue(conditional) {
 		return options.Inverse()
 	}
@@ -38,8 +33,8 @@ func unlessHelper(conditional interface{}, options *Options) interface{} {
 	return options.Fn()
 }
 
-// #with block helper
-func withHelper(context interface{}, options *Options) interface{} {
+// With is build-in helper function for with
+func With(context interface{}, options *Options) interface{} {
 	if IsTrue(context) {
 		return options.FnWith(context)
 	}
@@ -47,8 +42,8 @@ func withHelper(context interface{}, options *Options) interface{} {
 	return options.Inverse()
 }
 
-// #each block helper
-func eachHelper(context interface{}, options *Options) interface{} {
+// Each is build-in helper function for each
+func Each(context interface{}, options *Options) interface{} {
 	if !IsTrue(context) {
 		return options.Inverse()
 	}
@@ -103,20 +98,20 @@ func eachHelper(context interface{}, options *Options) interface{} {
 	return result
 }
 
-// #log helper
-func logHelper(message string) interface{} {
+// Log is build-in helper function for log
+func Log(message string) interface{} {
 	log.Print(message)
 	return ""
 }
 
-// #lookup helper
-func lookupHelper(obj interface{}, field string, options *Options) interface{} {
+// Lookup is build-in helper function for lookup
+func Lookup(obj interface{}, field string, options *Options) interface{} {
 	return Str(options.Eval(obj, field))
 }
 
-// #equal helper
+// Equal is build-in helper function for qual
 // Ref: https://github.com/aymerick/raymond/issues/7
-func equalHelper(a interface{}, b interface{}, options *Options) interface{} {
+func Equal(a interface{}, b interface{}, options *Options) interface{} {
 	if Str(a) == Str(b) {
 		return options.Fn()
 	}

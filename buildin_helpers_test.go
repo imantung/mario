@@ -3,6 +3,8 @@ package mario_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/imantung/mario"
 )
 
@@ -246,18 +248,16 @@ type Author struct {
 }
 
 func TestHelperCtx(t *testing.T) {
-	tpl := mario.Must(mario.New().Parse(`By {{ template "namefile" }}`))
-	tpl.RegisterHelper("template", func(name string, options *mario.Options) mario.SafeString {
-		context := options.Ctx()
+	tpl := mario.Must(mario.New().
+		WithHelperFunc("template", func(name string, options *mario.Options) mario.SafeString {
+			context := options.Ctx()
+			template := name + " - {{ firstName }} {{ lastName }}"
+			result, _ := mario.Must(mario.New().Parse(template)).Execute(context)
+			return mario.SafeString(result)
+		}).
+		Parse(`By {{ template "namefile" }}`),
+	)
+	result, _ := tpl.Execute(Author{"Alan", "Johnson"})
+	require.Equal(t, "By namefile - Alan Johnson", result)
 
-		template := name + " - {{ firstName }} {{ lastName }}"
-		result, _ := mario.Must(mario.New().Parse(template)).Execute(context)
-
-		return mario.SafeString(result)
-	})
-	result, _ := tpl.
-		Execute(Author{"Alan", "Johnson"})
-	if result != "By namefile - Alan Johnson" {
-		t.Errorf("Failed to render template in helper: %q", result)
-	}
 }

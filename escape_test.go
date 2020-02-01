@@ -8,12 +8,12 @@ import (
 )
 
 func TestEscape(t *testing.T) {
-	tpl, err := mario.New().Parse("{{link url text}}")
+	tpl, err := mario.New().
+		WithHelperFunc("link", func(url string, text string) mario.SafeString {
+			return mario.SafeString("<a href='" + mario.Escape(url) + "'>" + mario.Escape(text) + "</a>")
+		}).
+		Parse("{{link url text}}")
 	require.NoError(t, err)
-
-	tpl.RegisterHelper("link", func(url string, text string) mario.SafeString {
-		return mario.SafeString("<a href='" + mario.Escape(url) + "'>" + mario.Escape(text) + "</a>")
-	})
 
 	result, err := tpl.Execute(map[string]string{
 		"url":  "http://www.aymerick.com/",
