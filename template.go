@@ -61,7 +61,7 @@ func (tpl *Template) ExecuteWith(ctx interface{}, frame *DataFrame) (result stri
 	}
 
 	// setup visitor
-	visitor := &evalVisitor{
+	visitor := &evaluator{
 		helpers:   tpl.helpers,
 		partials:  tpl.partials,
 		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
