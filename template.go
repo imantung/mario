@@ -53,14 +53,24 @@ func (tpl *Template) Execute(ctx interface{}) (result string, err error) {
 }
 
 // ExecuteWith evaluates template with given context and private data frame.
-func (tpl *Template) ExecuteWith(ctx interface{}, privData *DataFrame) (result string, err error) {
+func (tpl *Template) ExecuteWith(ctx interface{}, frame *DataFrame) (result string, err error) {
 	defer errRecover(&err)
 
+	if frame == nil {
+		frame = NewDataFrame()
+	}
+
 	// setup visitor
-	v := newEvalVisitor(tpl, ctx, privData)
+	visitor := &evalVisitor{
+		helpers:   tpl.helpers,
+		partials:  tpl.partials,
+		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
+		dataFrame: frame,
+		exprFunc:  make(map[*ast.Expression]bool),
+	}
 
 	// visit AST
-	result, _ = tpl.program.Accept(v).(string)
+	result, _ = tpl.program.Accept(visitor).(string)
 
 	// named return values
 	return
@@ -145,13 +155,6 @@ func (tpl *Template) addPartial(name string, source string, template *Template) 
 	tpl.partials[name] = newPartial(name, source, template)
 }
 
-func (tpl *Template) findPartial(name string) *partial {
-	tpl.mutex.RLock()
-	defer tpl.mutex.RUnlock()
-
-	return tpl.partials[name]
-}
-
 func errRecover(errp *error) {
 	e := recover()
 	if e != nil {
@@ -164,10 +167,4 @@ func errRecover(errp *error) {
 			panic(e)
 		}
 	}
-}
-
-func (tpl *Template) findHelper(name string) reflect.Value {
-	tpl.mutex.RLock()
-	defer tpl.mutex.RUnlock()
-	return tpl.helpers[name]
 }

@@ -20,7 +20,8 @@ var (
 
 // evalVisitor evaluates a handlebars template with context
 type evalVisitor struct {
-	tpl *Template
+	helpers  map[string]reflect.Value
+	partials map[string]*partial
 
 	// contexts stack
 	ctx []reflect.Value
@@ -44,22 +45,22 @@ type evalVisitor struct {
 	curNode ast.Node
 }
 
-// NewEvalVisitor instanciate a new evaluation visitor with given context and initial private data frame
-//
-// If privData is nil, then a default data frame is created
-func newEvalVisitor(tpl *Template, ctx interface{}, privData *DataFrame) *evalVisitor {
-	frame := privData
-	if frame == nil {
-		frame = NewDataFrame()
-	}
+// // NewEvalVisitor instanciate a new evaluation visitor with given context and initial private data frame
+// //
+// // If privData is nil, then a default data frame is created
+// func newEvalVisitor(tpl *Template, ctx interface{}, privData *DataFrame) *evalVisitor {
+// 	frame := privData
+// 	if frame == nil {
+// 		frame = NewDataFrame()
+// 	}
 
-	return &evalVisitor{
-		tpl:       tpl,
-		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
-		dataFrame: frame,
-		exprFunc:  make(map[*ast.Expression]bool),
-	}
-}
+// 	return &evalVisitor{
+// 		tpl:       tpl,
+// 		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
+// 		dataFrame: frame,
+// 		exprFunc:  make(map[*ast.Expression]bool),
+// 	}
+// }
 
 // at sets current node
 func (v *evalVisitor) at(node ast.Node) {
@@ -569,7 +570,7 @@ func (v *evalVisitor) isHelperCall(node *ast.Expression) bool {
 // findHelper finds given helper
 func (v *evalVisitor) findHelper(name string) reflect.Value {
 	// check template helpers
-	if h := v.tpl.findHelper(name); h != zero {
+	if h, ok := v.helpers[name]; ok {
 		return h
 	}
 
@@ -679,7 +680,7 @@ func (v *evalVisitor) helperOptions(node *ast.Expression) *Options {
 // findPartial finds given partial
 func (v *evalVisitor) findPartial(name string) *partial {
 	// check template partials
-	if p := v.tpl.findPartial(name); p != nil {
+	if p, ok := v.partials[name]; ok {
 		return p
 	}
 
