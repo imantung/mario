@@ -14,7 +14,7 @@ import (
 // Template represents a handlebars template.
 type Template struct {
 	program  *ast.Program
-	helpers  map[string]reflect.Value
+	helpers  map[string]*Helper
 	partials map[string]*partial
 	mutex    sync.RWMutex // protects helpers and partials
 }
@@ -22,7 +22,7 @@ type Template struct {
 // New mustache handlebars template
 func New() *Template {
 	return &Template{
-		helpers:  make(map[string]reflect.Value),
+		helpers:  make(map[string]*Helper),
 		partials: make(map[string]*partial),
 	}
 }
@@ -77,18 +77,11 @@ func (tpl *Template) ExecuteWith(ctx interface{}, frame *DataFrame) (result stri
 }
 
 // RegisterHelper registers a helper for that template.
-func (tpl *Template) RegisterHelper(name string, helper interface{}) {
+func (tpl *Template) RegisterHelper(name string, fn interface{}) {
 	tpl.mutex.Lock()
 	defer tpl.mutex.Unlock()
 
-	if tpl.helpers[name] != zero {
-		panic(fmt.Sprintf("Helper %s already registered", name))
-	}
-
-	val := reflect.ValueOf(helper)
-	ensureValidHelper(name, val)
-
-	tpl.helpers[name] = val
+	tpl.helpers[name] = CreateHelper(fn)
 }
 
 // RegisterHelpers registers several helpers for that template.

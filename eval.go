@@ -20,7 +20,7 @@ var (
 
 // evaluator evaluates a handlebars template with context
 type evaluator struct {
-	helpers  map[string]reflect.Value
+	helpers  map[string]*Helper
 	partials map[string]*partial
 
 	// contexts stack
@@ -373,7 +373,9 @@ func (v *evaluator) evalMethod(ctx reflect.Value, name string, exprRoot bool) (r
 
 // evalFieldFunc evaluates given function
 func (v *evaluator) evalFieldFunc(name string, funcVal reflect.Value, exprRoot bool) reflect.Value {
-	ensureValidHelper(name, funcVal)
+	if err := isValidFunction(funcVal); err != nil {
+		panic(err)
+	}
 
 	var options *Options
 	if exprRoot {
@@ -562,20 +564,21 @@ func (v *evaluator) evalCtxPath(ctx reflect.Value, parts []string, exprRoot bool
 // isHelperCall returns true if given expression is a helper call
 func (v *evaluator) isHelperCall(node *ast.Expression) bool {
 	if helperName := node.HelperName(); helperName != "" {
-		return v.findHelper(helperName) != zero
+		_, exist := v.findHelper(helperName)
+		return exist
 	}
 	return false
 }
 
 // findHelper finds given helper
-func (v *evaluator) findHelper(name string) reflect.Value {
+func (v *evaluator) findHelper(name string) (h *Helper, exist bool) {
 	// check template helpers
-	if h, ok := v.helpers[name]; ok {
-		return h
+	if h, exist = v.helpers[name]; exist {
+		return
 	}
 
-	// check global helpers
-	return findHelper(name)
+	h, exist = buildinHelpers[name]
+	return
 }
 
 // callFunc calls function with given options
@@ -646,8 +649,8 @@ func (v *evaluator) callFunc(name string, funcVal reflect.Value, options *Option
 }
 
 // callHelper invoqs helper function for given expression node
-func (v *evaluator) callHelper(name string, helper reflect.Value, node *ast.Expression) interface{} {
-	result := v.callFunc(name, helper, v.helperOptions(node))
+func (v *evaluator) callHelper(name string, helper *Helper, node *ast.Expression) interface{} {
+	result := v.callFunc(name, helper.Value, v.helperOptions(node))
 	if !result.IsValid() {
 		return nil
 	}
@@ -913,7 +916,7 @@ func (v *evaluator) VisitExpression(node *ast.Expression) interface{} {
 
 	// helper call
 	if helperName := node.HelperName(); helperName != "" {
-		if helper := v.findHelper(helperName); helper != zero {
+		if helper, exist := v.findHelper(helperName); exist {
 			result = v.callHelper(helperName, helper, node)
 			done = true
 		}

@@ -236,18 +236,6 @@ func TestHelper(t *testing.T) {
 	launchTests(t, helperTests)
 }
 
-func TestRemoveHelper(t *testing.T) {
-	mario.RegisterHelper("testremovehelper", func() string { return "" })
-	if _, ok := mario.Helpers()["testremovehelper"]; !ok {
-		t.Error("Failed to register global helper")
-	}
-
-	mario.RemoveHelper("testremovehelper")
-	if _, ok := mario.Helpers()["testremovehelper"]; ok {
-		t.Error("Failed to remove global helper")
-	}
-}
-
 //
 // Fixes: https://github.com/imantung/mario/issues/2
 //
@@ -258,7 +246,8 @@ type Author struct {
 }
 
 func TestHelperCtx(t *testing.T) {
-	mario.RegisterHelper("template", func(name string, options *mario.Options) mario.SafeString {
+	tpl := mario.Must(mario.New().Parse(`By {{ template "namefile" }}`))
+	tpl.RegisterHelper("template", func(name string, options *mario.Options) mario.SafeString {
 		context := options.Ctx()
 
 		template := name + " - {{ firstName }} {{ lastName }}"
@@ -266,8 +255,7 @@ func TestHelperCtx(t *testing.T) {
 
 		return mario.SafeString(result)
 	})
-
-	result, _ := mario.Must(mario.New().Parse(`By {{ template "namefile" }}`)).
+	result, _ := tpl.
 		Execute(Author{"Alan", "Johnson"})
 	if result != "By namefile - Alan Johnson" {
 		t.Errorf("Failed to render template in helper: %q", result)
