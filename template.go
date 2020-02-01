@@ -1,7 +1,6 @@
 package mario
 
 import (
-	"fmt"
 	"io/ioutil"
 	"reflect"
 	"runtime"
@@ -15,7 +14,7 @@ import (
 type Template struct {
 	program  *ast.Program
 	helpers  map[string]*Helper
-	partials map[string]*partial
+	partials map[string]*Template
 	mutex    sync.RWMutex // protects helpers and partials
 }
 
@@ -31,7 +30,7 @@ func New() *Template {
 			"lookup": lookupHelper,
 			"equal":  equalHelper,
 		},
-		partials: make(map[string]*partial),
+		partials: make(map[string]*Template),
 	}
 }
 
@@ -88,61 +87,15 @@ func (tpl *Template) WithHelper(name string, helper *Helper) *Template {
 	return tpl
 }
 
-// RegisterPartial registers a partial for that template.
-func (tpl *Template) RegisterPartial(name string, source string) {
-	tpl.addPartial(name, source, nil)
-}
-
-// RegisterPartials registers several partials for that template.
-func (tpl *Template) RegisterPartials(partials map[string]string) {
-	for name, partial := range partials {
-		tpl.RegisterPartial(name, partial)
-	}
-}
-
-// RegisterPartialFile reads given file and registers its content as a partial with given name.
-func (tpl *Template) RegisterPartialFile(filePath string, name string) (err error) {
-	var b []byte
-	if b, err = ioutil.ReadFile(filePath); err != nil {
-		return err
-	}
-	tpl.RegisterPartial(name, string(b))
-	return nil
-}
-
-// RegisterPartialFiles reads several files and registers them as partials, the filename base is used as the partial name.
-func (tpl *Template) RegisterPartialFiles(filePaths ...string) error {
-	if len(filePaths) == 0 {
-		return nil
-	}
-	for _, filePath := range filePaths {
-		name := fileBase(filePath)
-		if err := tpl.RegisterPartialFile(filePath, name); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// RegisterPartialTemplate registers an already parsed partial for that template.
-func (tpl *Template) RegisterPartialTemplate(name string, template *Template) {
-	tpl.addPartial(name, "", template)
+// WithPartial registers an already parsed partial for that template.
+func (tpl *Template) WithPartial(name string, template *Template) *Template {
+	tpl.partials[name] = template
+	return tpl
 }
 
 // Program return program
 func (tpl *Template) Program() *ast.Program {
 	return tpl.program
-}
-
-func (tpl *Template) addPartial(name string, source string, template *Template) {
-	tpl.mutex.Lock()
-	defer tpl.mutex.Unlock()
-
-	if tpl.partials[name] != nil {
-		panic(fmt.Sprintf("Partial %s already registered", name))
-	}
-
-	tpl.partials[name] = newPartial(name, source, template)
 }
 
 func errRecover(errp *error) {

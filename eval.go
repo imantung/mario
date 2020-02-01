@@ -21,7 +21,7 @@ var (
 // evaluator evaluates a handlebars template with context
 type evaluator struct {
 	helpers  map[string]*Helper
-	partials map[string]*partial
+	partials map[string]*Template
 
 	// contexts stack
 	ctx []reflect.Value
@@ -692,12 +692,7 @@ func (v *evaluator) partialContext(node *ast.PartialStatement) reflect.Value {
 }
 
 // evalPartial evaluates a partial
-func (v *evaluator) evalPartial(p *partial, node *ast.PartialStatement) string {
-	// get partial template
-	partialTpl, err := p.template()
-	if err != nil {
-		v.errPanic(err)
-	}
+func (v *evaluator) evalPartial(partialTpl *Template, node *ast.PartialStatement) string {
 
 	// push partial context
 	ctx := v.partialContext(node)

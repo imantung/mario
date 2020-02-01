@@ -51,9 +51,8 @@ func launchTests(t *testing.T, tests []Test) {
 				tpl.WithHelperFunc(name, fn)
 			}
 
-			if len(test.partials) > 0 {
-				// register partials
-				tpl.RegisterPartials(test.partials)
+			for name, source := range test.partials {
+				tpl.WithPartial(name, mario.Must(mario.New().Parse(source)))
 			}
 
 			// setup private data frame
