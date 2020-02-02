@@ -1,7 +1,7 @@
 package mario
 
 import (
-	"io/ioutil"
+	"io"
 	"reflect"
 	"runtime"
 	"sync"
@@ -55,22 +55,13 @@ func (tpl *Template) Parse(source string) (*Template, error) {
 	return tpl, nil
 }
 
-// ParseFile reads given file and returns parsed template.
-func ParseFile(filePath string) (*Template, error) {
-	b, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return nil, err
-	}
-	return New().Parse(string(b))
-}
-
 // Execute evaluates template with given context.
-func (tpl *Template) Execute(ctx interface{}) (result string, err error) {
-	return tpl.ExecuteWith(ctx, nil)
+func (tpl *Template) Execute(w io.Writer, ctx interface{}) error {
+	return tpl.ExecuteWith(w, ctx, nil)
 }
 
 // ExecuteWith evaluates template with given context and private data frame.
-func (tpl *Template) ExecuteWith(ctx interface{}, frame *DataFrame) (result string, err error) {
+func (tpl *Template) ExecuteWith(w io.Writer, ctx interface{}, frame *DataFrame) (err error) {
 	defer errRecover(&err)
 	if frame == nil {
 		frame = NewDataFrame()
@@ -82,8 +73,7 @@ func (tpl *Template) ExecuteWith(ctx interface{}, frame *DataFrame) (result stri
 		dataFrame: frame,
 		exprFunc:  make(map[*ast.Expression]bool),
 	}
-	result, _ = tpl.program.Accept(eval).(string)
-	return
+	return eval.VisitProgram(w, tpl.Program())
 }
 
 // WithHelperFunc to create and set helper

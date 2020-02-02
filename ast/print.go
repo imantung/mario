@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -57,7 +58,7 @@ func (v *printVisitor) line(val string) {
 // Statements
 
 // VisitProgram implements corresponding Visitor interface method
-func (v *printVisitor) VisitProgram(node *Program) interface{} {
+func (v *printVisitor) VisitProgram(w io.Writer, node *Program) error {
 	if len(node.BlockParams) > 0 {
 		v.line("BLOCK PARAMS: [ " + strings.Join(node.BlockParams, " ") + " ]")
 	}
@@ -65,7 +66,6 @@ func (v *printVisitor) VisitProgram(node *Program) interface{} {
 	for _, n := range node.Body {
 		n.Accept(v)
 	}
-
 	return nil
 }
 

@@ -3,7 +3,9 @@ package ast
 
 import (
 	"fmt"
+	"io"
 	"strconv"
+	"strings"
 )
 
 // References:
@@ -28,7 +30,7 @@ type Node interface {
 
 // Visitor is the interface to visit an AST.
 type Visitor interface {
-	VisitProgram(*Program) interface{}
+	VisitProgram(io.Writer, *Program) error
 
 	// statements
 	VisitMustache(*MustacheStatement) interface{}
@@ -178,7 +180,9 @@ func (node *Program) String() string {
 
 // Accept is the receiver entry point for visitors.
 func (node *Program) Accept(visitor Visitor) interface{} {
-	return visitor.VisitProgram(node)
+	var b strings.Builder
+	visitor.VisitProgram(&b, node)
+	return b.String()
 }
 
 // AddStatement adds given statement to program.

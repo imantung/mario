@@ -1,6 +1,7 @@
 package mario_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/imantung/mario"
@@ -66,9 +67,9 @@ func TestSafeString(t *testing.T) {
 		Parse("{{em}}")
 	require.NoError(t, err)
 
-	output, err := tpl.Execute(nil)
-	require.NoError(t, err)
-	require.Equal(t, `<em>FOO BAR</em>`, output)
+	var b strings.Builder
+	require.NoError(t, tpl.Execute(&b, nil))
+	require.Equal(t, `<em>FOO BAR</em>`, b.String())
 }
 
 func TestEscape(t *testing.T) {
@@ -79,10 +80,10 @@ func TestEscape(t *testing.T) {
 		Parse("{{link url text}}")
 	require.NoError(t, err)
 
-	result, err := tpl.Execute(map[string]string{
+	var b strings.Builder
+	require.NoError(t, tpl.Execute(&b, map[string]string{
 		"url":  "http://www.aymerick.com/",
 		"text": "This is a <em>cool</em> website",
-	})
-	require.NoError(t, err)
-	require.Equal(t, `<a href='http://www.aymerick.com/'>This is a &lt;em&gt;cool&lt;/em&gt; website</a>`, result)
+	}))
+	require.Equal(t, `<a href='http://www.aymerick.com/'>This is a &lt;em&gt;cool&lt;/em&gt; website</a>`, b.String())
 }

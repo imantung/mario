@@ -1,6 +1,7 @@
 package mario_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -252,12 +253,13 @@ func TestHelperCtx(t *testing.T) {
 		WithHelperFunc("template", func(name string, options *mario.Options) mario.SafeString {
 			context := options.Ctx()
 			template := name + " - {{ firstName }} {{ lastName }}"
-			result, _ := mario.Must(mario.New().Parse(template)).Execute(context)
-			return mario.SafeString(result)
+			var b strings.Builder
+			mario.Must(mario.New().Parse(template)).Execute(&b, context)
+			return mario.SafeString(b.String())
 		}).
 		Parse(`By {{ template "namefile" }}`),
 	)
-	result, _ := tpl.Execute(Author{"Alan", "Johnson"})
-	require.Equal(t, "By namefile - Alan Johnson", result)
-
+	var b strings.Builder
+	require.NoError(t, tpl.Execute(&b, Author{"Alan", "Johnson"}))
+	require.Equal(t, "By namefile - Alan Johnson", b.String())
 }

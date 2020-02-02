@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"io"
 	"regexp"
 
 	"github.com/imantung/mario/ast"
@@ -168,7 +169,7 @@ func isNextWhitespaceProgram(body []ast.Node, i int, isRoot bool) bool {
 // Visitor interface
 //
 
-func (v *whitespaceVisitor) VisitProgram(program *ast.Program) interface{} {
+func (v *whitespaceVisitor) VisitProgram(w io.Writer, program *ast.Program) error {
 	isRoot := !v.isRootSeen
 	v.isRootSeen = true
 
@@ -239,6 +240,7 @@ func (v *whitespaceVisitor) VisitProgram(program *ast.Program) interface{} {
 	}
 
 	return nil
+
 }
 
 func (v *whitespaceVisitor) VisitBlock(block *ast.BlockStatement) interface{} {

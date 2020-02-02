@@ -2,6 +2,7 @@ package mario_test
 
 import (
 	"fmt"
+	"strings"
 
 	"regexp"
 	"testing"
@@ -52,10 +53,11 @@ func launchTests(t *testing.T, tests []Test) {
 			}
 
 			// render template
-			output, err := tpl.ExecuteWith(test.data, privData)
-			if err != nil {
+			var b strings.Builder
+			if err := tpl.ExecuteWith(&b, test.data, privData); err != nil {
 				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, mario.Str(test.data), err, ast.Print(tpl.Program()))
 			} else {
+				output := b.String()
 				// check output
 				var expectedArr []string
 				expectedArr, ok := test.output.([]string)
@@ -118,9 +120,9 @@ func launchErrorTests(t *testing.T, tests []Test) {
 			}
 
 			// render template
-			output, err := tpl.ExecuteWith(test.data, privData)
-			if err == nil {
-				t.Errorf("Test '%s' failed - Error expected\ninput:\n\t'%s'\ngot\n\t%q\nAST:\n%q", test.name, test.input, output, ast.Print(tpl.Program()))
+			var b strings.Builder
+			if err := tpl.ExecuteWith(&b, test.data, privData); err == nil {
+				t.Errorf("Test '%s' failed - Error expected\ninput:\n\t'%s'\ngot\n\t%q\nAST:\n%q", test.name, test.input, b.String(), ast.Print(tpl.Program()))
 			} else {
 				var errMatch error
 				match := false

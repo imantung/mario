@@ -1,6 +1,7 @@
 package mario_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/imantung/mario"
@@ -31,24 +32,24 @@ func TestTemplate_Exec(t *testing.T) {
 	tpl, err := mario.New().Parse("<h1>{{title}}</h1><p>{{body.content}}</p>")
 	require.NoError(t, err)
 
-	output, err := tpl.Execute(map[string]interface{}{
+	var b strings.Builder
+	require.NoError(t, tpl.Execute(&b, map[string]interface{}{
 		"title": "foo",
 		"body":  map[string]string{"content": "bar"},
-	})
-	require.NoError(t, err)
-	require.Equal(t, `<h1>foo</h1><p>bar</p>`, output)
+	}))
+	require.Equal(t, `<h1>foo</h1><p>bar</p>`, b.String())
 }
 
 func TestTemplate_MustExec(t *testing.T) {
 	tpl, err := mario.New().Parse("<h1>{{title}}</h1><p>{{body.content}}</p>")
 	require.NoError(t, err)
 
-	output, err := tpl.Execute(map[string]interface{}{
+	var b strings.Builder
+	require.NoError(t, tpl.Execute(&b, map[string]interface{}{
 		"title": "foo",
 		"body":  map[string]string{"content": "bar"},
-	})
-	require.NoError(t, err)
-	require.Equal(t, `<h1>foo</h1><p>bar</p>`, output)
+	}))
+	require.Equal(t, `<h1>foo</h1><p>bar</p>`, b.String())
 }
 
 func TestTemplate_ExecWith(t *testing.T) {
@@ -60,13 +61,12 @@ func TestTemplate_ExecWith(t *testing.T) {
 	frame := mario.NewDataFrame()
 	frame.Set("baz", map[string]string{"bat": "unicorns"})
 
-	// evaluate template
-	output, err := tpl.ExecuteWith(map[string]interface{}{
+	var b strings.Builder
+	require.NoError(t, tpl.ExecuteWith(&b, map[string]interface{}{
 		"title": "foo",
 		"body":  map[string]string{"content": "bar"},
-	}, frame)
-	require.NoError(t, err)
-	require.Equal(t, `<h1>foo</h1><p>bar and unicorns</p>`, output)
+	}, frame))
+	require.Equal(t, `<h1>foo</h1><p>bar and unicorns</p>`, b.String())
 }
 
 func TestTemplate_PrintAST(t *testing.T) {

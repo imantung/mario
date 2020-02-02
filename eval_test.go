@@ -1,6 +1,7 @@
 package mario_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/imantung/mario"
@@ -167,9 +168,9 @@ func TestEvalStruct(t *testing.T) {
 		},
 	}
 
-	output, err := mario.Must(mario.New().Parse(source)).Execute(data)
-	require.NoError(t, err)
-	require.Equal(t, expected, output)
+	var b strings.Builder
+	require.NoError(t, mario.Must(mario.New().Parse(source)).Execute(&b, data))
+	require.Equal(t, expected, b.String())
 }
 
 func TestEvalStructTag(t *testing.T) {
@@ -223,9 +224,9 @@ func TestEvalStructTag(t *testing.T) {
 		},
 	}
 
-	output, err := mario.Must(mario.New().Parse(source)).Execute(data)
-	require.NoError(t, err)
-	require.Equal(t, expected, output)
+	var b strings.Builder
+	require.NoError(t, mario.Must(mario.New().Parse(source)).Execute(&b, data))
+	require.Equal(t, expected, b.String())
 }
 
 type TestFoo struct {
@@ -237,11 +238,14 @@ func (t *TestFoo) Subject() string {
 
 func TestEvalMethod(t *testing.T) {
 	t.Parallel()
-	output, err := mario.Must(mario.New().Parse(`Subject is {{subject}}! YES I SAID {{Subject}}!`)).
-		Execute(&TestFoo{})
-	require.NoError(t, err)
-	require.Equal(t, `Subject is foo! YES I SAID foo!`, output)
 
+	source := `Subject is {{subject}}! YES I SAID {{Subject}}!`
+	expected := `Subject is foo! YES I SAID foo!`
+	data := &TestFoo{}
+
+	var b strings.Builder
+	require.NoError(t, mario.Must(mario.New().Parse(source)).Execute(&b, data))
+	require.Equal(t, expected, b.String())
 }
 
 type TestBar struct {
@@ -260,11 +264,10 @@ func TestEvalMethodReturningFunc(t *testing.T) {
 
 	source := `Subject is {{subject}}! YES I SAID {{Subject}}!`
 	expected := `Subject is bar! YES I SAID bar!`
-
 	data := &TestBar{}
 
-	output, err := mario.Must(mario.New().Parse(source)).Execute(data)
-	require.NoError(t, err)
-	require.Equal(t, expected, output)
+	var b strings.Builder
+	require.NoError(t, mario.Must(mario.New().Parse(source)).Execute(&b, data))
+	require.Equal(t, expected, b.String())
 
 }

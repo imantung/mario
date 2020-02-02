@@ -1,8 +1,8 @@
 package mario
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"reflect"
 	"strconv"
 	"strings"
@@ -751,20 +751,17 @@ func (v *evaluator) wasFuncCall(node *ast.Expression) bool {
 // Statements
 
 // VisitProgram implements corresponding Visitor interface method
-func (v *evaluator) VisitProgram(node *ast.Program) interface{} {
+func (v *evaluator) VisitProgram(w io.Writer, node *ast.Program) (err error) {
 	v.at(node)
-
-	buf := new(bytes.Buffer)
-
 	for _, n := range node.Body {
 		if str := Str(n.Accept(v)); str != "" {
-			if _, err := buf.Write([]byte(str)); err != nil {
-				v.errPanic(err)
+			if _, err = fmt.Fprint(w, str); err != nil {
+				return
 			}
+
 		}
 	}
-
-	return buf.String()
+	return nil
 }
 
 // VisitMustache implements corresponding Visitor interface method
