@@ -2,210 +2,71 @@
 
 [![Build Status](https://secure.travis-ci.org/aymerick/mario.svg?branch=master)](http://travis-ci.org/aymerick/mario) [![GoDoc](https://godoc.org/github.com/imantung/mario?status.svg)](http://godoc.org/github.com/imantung/mario)
 
-Successor of [raymond](https://github.com/aymerick/raymond). Handlebars for [golang](https://golang.org) with the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
+
+Continues work of [raymond](https://github.com/aymerick/raymond) to support [Handlebars](https://handlebarsjs.com/) for [golang](https://golang.org) 
+
+
 
 <img src="mario.jpeg?raw=true">
 
-# Table of Contents
+## Handlebars 
 
-- [Mario](#mario)
-- [Table of Contents](#table-of-contents)
-  - [Quick Start](#quick-start)
-  - [Correct Usage](#correct-usage)
-  - [Context](#context)
-  - [HTML Escaping](#html-escaping)
-  - [Helpers](#helpers)
-    - [Template Helpers](#template-helpers)
-    - [Built-In Helpers](#built-in-helpers)
-      - [The `if` block helper](#the-if-block-helper)
-      - [The `unless` block helper](#the-unless-block-helper)
-      - [The `each` block helper](#the-each-block-helper)
-      - [The `with` block helper](#the-with-block-helper)
-      - [The `lookup` helper](#the-lookup-helper)
-      - [The `log` helper](#the-log-helper)
-      - [The `equal` helper](#the-equal-helper)
-    - [Block Helpers](#block-helpers)
-      - [Block Evaluation](#block-evaluation)
-      - [Conditional](#conditional)
-      - [Else Block Evaluation](#else-block-evaluation)
-      - [Block Parameters](#block-parameters)
-    - [Helper Parameters](#helper-parameters)
-      - [Automatic conversion](#automatic-conversion)
-    - [Options Argument](#options-argument)
-      - [Context Values](#context-values)
-      - [Helper Hash Arguments](#helper-hash-arguments)
-      - [Private Data](#private-data)
-    - [Utilites](#utilites)
-      - [`Str()`](#str)
-      - [`IsTrue()`](#istrue)
-  - [Context Functions](#context-functions)
-  - [Partials](#partials)
-    - [Template Partials](#template-partials)
-    - [Global Partials](#global-partials)
-    - [Dynamic Partials](#dynamic-partials)
-    - [Partial Contexts](#partial-contexts)
-    - [Partial Parameters](#partial-parameters)
-  - [Utility Functions](#utility-functions)
-  - [Mustache](#mustache)
-  - [Limitations](#limitations)
-  - [Handlebars Lexer](#handlebars-lexer)
-  - [Handlebars Parser](#handlebars-parser)
-  - [Test](#test)
-  - [References](#references)
-  - [Others Implementations](#others-implementations)
+Handlebars is a superset of [mustache](https://mustache.github.io) but it differs on those points:
+
+- Alternative delimiters are not supported
+- There is no recursive lookup
 
 
-## Quick Start
 
-    $ go get github.com/imantung/mario
+## Installation
 
-The quick and dirty way of rendering a handlebars template:
-
-```go
-package main
-
-import (
-    "fmt"
-
-    "github.com/imantung/mario"
-)
-
-func main() {
-    tpl := `<div class="entry">
-  <h1>{{title}}</h1>
-  <div class="body">
-    {{body}}
-  </div>
-</div>
-`
-
-    ctx := map[string]string{
-        "title": "My New Post",
-        "body":  "This is my first post!",
-    }
-
-    result, err := mario.Render(tpl, ctx)
-    if err != nil {
-        panic("Please report a bug :)")
-    }
-
-    fmt.Print(result)
-}
+```bash
+go get -u github.com/imantung/mario
 ```
 
-Displays:
+## Usages
 
-```html
-<div class="entry">
-  <h1>My New Post</h1>
-  <div class="body">
-    This is my first post!
-  </div>
-</div>
-```
-
-Please note that the template will be parsed everytime you call `Render()` function. So you probably want to read the next section.
-
-
-## Correct Usage
-
-To avoid parsing a template several times, use the `Parse()` and `Exec()` functions:
+Mario's function implement mimic [go template](https://golang.org/pkg/text/template/) for convenience.
 
 ```go
-package main
+source := `Hello {{name}}`
 
-import (
-    "fmt"
-
-    "github.com/imantung/mario"
-)
-
-func main() {
-    source := `<div class="entry">
-  <h1>{{title}}</h1>
-  <div class="body">
-    {{body}}
-  </div>
-</div>
-`
-
-    ctxList := []map[string]string{
-        {
-            "title": "My New Post",
-            "body":  "This is my first post!",
-        },
-        {
-            "title": "Here is another post",
-            "body":  "This is my second post!",
-        },
-    }
-
-    // parse template
-    tpl, err := mario.Parse(source)
-    if err != nil {
-        panic(err)
-    }
-
-    for _, ctx := range ctxList {
-        // render template
-        result, err := tpl.Execute(ctx)
-        if err != nil {
-            panic(err)
-        }
-
-        fmt.Print(result)
-    }
+ctx := map[string]string{
+  "name": "World",
 }
 
+tpl, err := mario.New().Parse(source)
+if err != nil {
+  panic(err)
+}
+
+var b strings.Builder
+if err := tpl.Execute(&b, ctx); err != nil {
+  panic(err)
+}
+
+fmt.Println(b.String())
+
+// Output: 
+// Hello World
 ```
 
-Displays:
-
-```html
-<div class="entry">
-  <h1>My New Post</h1>
-  <div class="body">
-    This is my first post!
-  </div>
-</div>
-<div class="entry">
-  <h1>Here is another post</h1>
-  <div class="body">
-    This is my second post!
-  </div>
-</div>
-```
-
-You can use `MustParse()` and `MustExec()` functions if you don't want to deal with errors:
-
+For shortcut, using `Must` to create template object without error
 ```go
-// parse template
-tpl := mario.MustParse(source)
-
-// render template
-result := tpl.MustExec(ctx)
+var t = mario.Must(mario.New().Parse(source))
 ```
 
-
-## Context
+## Rendering Context
 
 The rendering context can contain any type of values, including `array`, `slice`, `map`, `struct` and `func`.
 
-When using structs, be warned that only exported fields are accessible. However you can access exported fields in template with their lowercase names. For example, both `{{author.firstName}}` and `{{Author.FirstName}}` references give the same result, as long as `Author` and `FirstName` are exported struct fields.
+### Map
 
-More, you can use the `handlebars` struct tag to specify a template variable name different from the struct field name.
+
+### Struct
 
 ```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imantung/mario"
-)
-
-func main() {
-    source := `<div class="post">
+source := `<div class="post">
   <h1>By {{author.firstName}} {{author.lastName}}</h1>
   <div class="body">{{body}}</div>
 
@@ -217,242 +78,130 @@ func main() {
   {{/each}}
 </div>`
 
-    type Person struct {
-        FirstName string
-        LastName  string
-    }
+ctx := Post{
+  Person{"Jean", "Valjean"},
+  "Life is difficult",
+  []Comment{
+    Comment{
+      Person{"Marcel", "Beliveau"},
+      "LOL!",
+    },
+  },
+}
 
-    type Comment struct {
-        Author Person
-        Body   string `handlebars:"content"`
-    }
+var b strings.Builder
+if err := mario.Must(mario.New().Parse(source)).Execute(&b, ctx); err != nil {
+  panic(err)
+}
 
-    type Post struct {
-        Author   Person
-        Body     string
-        Comments []Comment
-    }
+fmt.Println(b.String())
 
-    ctx := Post{
-        Person{"Jean", "Valjean"},
-        "Life is difficult",
-        []Comment{
-            Comment{
-                Person{"Marcel", "Beliveau"},
-                "LOL!",
-            },
-        },
-    }
-
-    output := mario.MustRender(source, ctx)
-
-    fmt.Print(output)
+// Output: 
+// <div class="post">
+//   <h1>By Jean Valjean</h1>
+//   <div class="body">Life is difficult</div>
+//
+//   <h1>Comments</h1>
+//
+//   <h2>By Marcel Beliveau</h2>
+//   <div class="body">LOL!</div>
+// </div>
 }
 ```
 
-Output:
-
-```html
-<div class="post">
-  <h1>By Jean Valjean</h1>
-  <div class="body">Life is difficult</div>
-
-  <h1>Comments</h1>
-
-  <h2>By Marcel Beliveau</h2>
-  <div class="body">LOL!</div>
-</div>
+When using structs, be warned that only exported fields are accessible. 
+```go
+type Person struct {
+	FirstName  string
+	LastName   string
+	motherName string // NOTE: Unexported and can't be access
+}
 ```
+
+However you can access exported fields in template with their lowercase names. For example, both `{{author.firstName}}` and `{{Author.FirstName}}` references give the same result, as long as `Author` and `FirstName` are exported struct fields.
+
+More, you can use the `handlebars` struct tag to specify a template variable name different from the struct field name.
+
+### Function
+
+In addition to helpers, lambdas found in context are evaluated.
+
+For example, that template and context:
+
+```go
+source := "I {{feeling}} you"
+
+ctx := map[string]interface{}{
+    "feeling": func() string {
+        rand.Seed(time.Now().UTC().UnixNano())
+
+        feelings := []string{"hate", "love"}
+        return feelings[rand.Intn(len(feelings))]
+    },
+}
+```
+
+Randomly renders `I hate you` or `I love you`.
+
+Those context functions behave like helper functions: they can be called with parameters and they can have an `Options` argument.
+
 
 ## HTML Escaping
 
 By default, the result of a mustache expression is HTML escaped. Use the triple mustache `{{{` to output unescaped values.
 
 ```go
-source := `<div class="entry">
-  <h1>{{title}}</h1>
-  <div class="body">
-    {{{body}}}
-  </div>
-</div>
-`
+source := "{{text}}\n{{{text}}}"
 
-ctx := map[string]string{
-    "title": "All about <p> Tags",
-    "body":  "<p>This is a post about &lt;p&gt; tags</p>",
+data := map[string]string{
+  "text": "This is <html> Tags",
 }
 
-tpl := mario.MustParse(source)
-result := tpl.MustExec(ctx)
+var b strings.Builder
+if err := mario.Must(mario.New().Parse(source)).Execute(&b, data); err != nil {
+  panic(err)
+}
 
-fmt.Print(result)
+fmt.Println(b.String())
+
+// Output: 
+// This is &lt;html&gt; Tags
+// This is <html> Tags
 ```
 
-Output:
-
-```html
-<div class="entry">
-  <h1>All about &lt;p&gt; Tags</h1>
-  <div class="body">
-    <p>This is a post about &lt;p&gt; tags</p>
-  </div>
-</div>
-```
-
-When returning HTML from a helper, you should return a `SafeString` if you don't want it to be escaped by default. When using `SafeString` all unknown or unsafe data should be manually escaped with the `Escape` method.
+For custom helper implementation, you should return a `SafeString` if you don't want it to be escaped by default. When using `SafeString` all unknown or unsafe data should be manually escaped with the `Escape` method.
 
 ```go
-mario.RegisterHelper("link", func(url, text string) mario.SafeString {
+tpl, err := mario.New().
+  WithHelperFunc("link", func(url, text string) mario.SafeString {
     return mario.SafeString("<a href='" + mario.Escape(url) + "'>" + mario.Escape(text) + "</a>")
-})
+  }).
+  Parse("{{link url text}}")
 
-tpl := mario.MustParse("{{link url text}}")
-
-ctx := map[string]string{
-    "url":  "http://www.aymerick.com/",
-    "text": "This is a <em>cool</em> website",
+if err != nil {
+  panic(err)
 }
 
-result := tpl.MustExec(ctx)
-fmt.Print(result)
-```
+data := map[string]string{
+  "url":  "http://www.aymerick.com/",
+  "text": "This is a <em>cool</em> website",
+}
 
-Output:
+var b strings.Builder
+if err := tpl.Execute(&b, data); err != nil {
+  panic(err)
+}
 
-```html
-<a href='http://www.aymerick.com/'>This is a &lt;em&gt;cool&lt;/em&gt; website</a>
+fmt.Println(b.String())
+
+// Output:
+// <a href='http://www.aymerick.com/'>This is a &lt;em&gt;cool&lt;/em&gt; website</a>
 ```
 
 
 ## Helpers
 
-Helpers can be accessed from any context in a template. You can register a helper with the `RegisterHelper` function.
-
-For example:
-
-```html
-<div class="post">
-  <h1>By {{fullName author}}</h1>
-  <div class="body">{{body}}</div>
-
-  <h1>Comments</h1>
-
-  {{#each comments}}
-  <h2>By {{fullName author}}</h2>
-  <div class="body">{{body}}</div>
-  {{/each}}
-</div>
-```
-
-With this context and helper:
-
-```go
-ctx := map[string]interface{}{
-    "author": map[string]string{"firstName": "Jean", "lastName": "Valjean"},
-    "body":   "Life is difficult",
-    "comments": []map[string]interface{}{{
-        "author": map[string]string{"firstName": "Marcel", "lastName": "Beliveau"},
-        "body":   "LOL!",
-    }},
-}
-
-mario.RegisterHelper("fullName", func(person map[string]string) string {
-    return person["firstName"] + " " + person["lastName"]
-})
-```
-
-Outputs:
-
-```html
-<div class="post">
-  <h1>By Jean Valjean</h1>
-  <div class="body">Life is difficult</div>
-
-  <h1>Comments</h1>
-
-  <h2>By Marcel Beliveau</h2>
-  <div class="body">LOL!</div>
-</div>
-```
-
-Helper arguments can be any type.
-
-The following example uses structs instead of maps and produces the same output as the previous one:
-
-```html
-<div class="post">
-  <h1>By {{fullName author}}</h1>
-  <div class="body">{{body}}</div>
-
-  <h1>Comments</h1>
-
-  {{#each comments}}
-  <h2>By {{fullName author}}</h2>
-  <div class="body">{{body}}</div>
-  {{/each}}
-</div>
-```
-
-With this context and helper:
-
-```go
-type Post struct {
-    Author   Person
-    Body     string
-    Comments []Comment
-}
-
-type Person struct {
-    FirstName string
-    LastName  string
-}
-
-type Comment struct {
-    Author Person
-    Body   string
-}
-
-ctx := Post{
-    Person{"Jean", "Valjean"},
-    "Life is difficult",
-    []Comment{
-        Comment{
-            Person{"Marcel", "Beliveau"},
-            "LOL!",
-        },
-    },
-}
-
-mario.RegisterHelper("fullName", func(person Person) string {
-    return person.FirstName + " " + person.LastName
-})
-```
-
-You can unregister global helpers with `RemoveHelper` and `RemoveAllHelpers` functions:
-
-```go
-mario.RemoveHelper("fullname")
-```
-
-```go
-mario.RemoveAllHelpers()
-```
-
-
-### Template Helpers
-
-You can register a helper on a specific template, and in that case that helper will be available to that template only:
-
-```go
-tpl := mario.MustParse("User: {{fullName user.firstName user.lastName}}")
-
-tpl.RegisterHelper("fullName", func(firstName, lastName string) string {
-  return firstName + " " + lastName
-})
-```
-
-
-### Built-In Helpers
+### Built-In
 
 Those built-in helpers are available to all templates.
 
@@ -491,21 +240,6 @@ You can chain several blocks. For example that template:
 {{else}}
   <img src="wat.gif" alt="Unknown">
 {{/if}}
-```
-
-With that context:
-
-```go
-ctx := map[string]interface{}{
-    "isActive":   false,
-    "isInactive": false,
-}
-```
-
-Outputs:
-
-```html
- <img src="wat.gif" alt="Unknown">
 ```
 
 
@@ -1041,84 +775,6 @@ mario.RegisterHelper("voodoo", func(options *mario.Options) string {
 Helpers that need to evaluate the block with a private data frame and a new context can call `options.FnCtxData()`.
 
 
-### Utilites
-
-In addition to `Escape()`, mario provides utility functions that can be usefull for helpers.
-
-
-#### `Str()`
-
-`Str()` converts its parameter to a `string`.
-
-Booleans:
-
-```go
-mario.Str(3) + " foos and " + mario.Str(-1.25) + " bars"
-// Outputs: "3 foos and -1.25 bars"
-```
-
-Numbers:
-
-``` go
-"everything is " + mario.Str(true) + " and nothing is " + mario.Str(false)
-// Outputs: "everything is true and nothing is false"
-```
-
-Maps:
-
-```go
-mario.Str(map[string]string{"foo": "bar"})
-// Outputs: "map[foo:bar]"
-```
-
-Arrays and Slices:
-
-```go
-mario.Str([]interface{}{true, 10, "foo", 5, "bar"})
-// Outputs: "true10foo5bar"
-```
-
-
-#### `IsTrue()`
-
-`IsTrue()` returns the truthy version of its parameter.
-
-It returns `false` when parameter is either:
-
-  - an empty array
-  - an empty slice
-  - an empty map
-  - `""`
-  - `nil`
-  - `0`
-  - `false`
-
-For all others values, `IsTrue()` returns `true`.
-
-
-## Context Functions
-
-In addition to helpers, lambdas found in context are evaluated.
-
-For example, that template and context:
-
-```go
-source := "I {{feeling}} you"
-
-ctx := map[string]interface{}{
-    "feeling": func() string {
-        rand.Seed(time.Now().UTC().UnixNano())
-
-        feelings := []string{"hate", "love"}
-        return feelings[rand.Intn(len(feelings))]
-    },
-}
-```
-
-Randomly renders `I hate you` or `I love you`.
-
-Those context functions behave like helper functions: they can be called with parameters and they can have an `Options` argument.
-
 
 ## Partials
 
@@ -1266,22 +922,6 @@ My hero is Goldorak
 ```
 
 
-## Utility Functions
-
-You can use following utility fuctions to parse and register partials from files:
-
-- `ParseFile()` - reads a file and return parsed template
-- `Template.RegisterPartialFile()` - reads a file and registers its content as a partial with given name
-- `Template.RegisterPartialFiles()` - reads several files and registers them as partials, the filename base is used as the partial name
-
-
-## Mustache
-
-Handlebars is a superset of [mustache](https://mustache.github.io) but it differs on those points:
-
-- Alternative delimiters are not supported
-- There is no recursive lookup
-
 
 ## Limitations
 
@@ -1306,120 +946,18 @@ These handlebars features are currently NOT implemented:
 - `@level` - log level
 
 
-## Handlebars Lexer
-
-You should not use the lexer directly, but for your information here is an example:
-
-```go
-package main
-
-import (
-    "fmt"
-
-    "github.com/imantung/mario/lexer"
-)
-
-func main() {
-    source := "You know {{nothing}} John Snow"
-
-    output := ""
-
-    lex := lexer.Scan(source)
-    for {
-        // consume next token
-        token := lex.NextToken()
-
-        output += fmt.Sprintf(" %s", token)
-
-        // stops when all tokens have been consumed, or on error
-        if token.Kind == lexer.TokenEOF || token.Kind == lexer.TokenError {
-            break
-        }
-    }
-
-    fmt.Print(output)
-}
-```
-
-Outputs:
-
-```
-Content{"You know "} Open{"{{"} ID{"nothing"} Close{"}}"} Content{" John Snow"} EOF
-```
-
-
-## Handlebars Parser
-
-You should not use the parser directly, but for your information here is an example:
-
-```go
-package main
-
-import (
-    "fmt"
-
-    "github.com/imantung/mario/ast"
-    "github.com/imantung/mario/parser"
-)
-
-fu  nc main() {
-    source := "You know {{nothing}} John Snow"
-
-    // parse template
-    program, err := parser.Parse(source)
-    if err != nil {
-        panic(err)
-    }
-
-    // print AST
-    output := ast.Print(program)
-
-    fmt.Print(output)
-}
-```
-
-Outputs:
-
-```
-CONTENT[ 'You know ' ]
-{{ PATH:nothing [] }}
-CONTENT[ ' John Snow' ]
-```
-
-
-## Test
-
-First, fetch mustache tests:
-
-    $ git submodule update --init
-
-To run all tests:
-
-    $ go test ./...
-
-To filter tests:
-
-    $ go test -run="Partials"
-
-To run all test and all benchmarks:
-
-    $ go test -bench . ./...
-
-To test with race detection:
-
-    $ go test -race ./...
-
-
 ## References
 
   - <http://handlebarsjs.com/>
   - <https://mustache.github.io/mustache.5.html>
   - <https://github.com/golang/go/tree/master/src/text/template>
   - <https://www.youtube.com/watch?v=HxaD_trXwRE>
+  - <https://github.com/aymerick/raymond>
 
 
 ## Others Implementations
 
+- [raymond](https://github.com/aymerick/raymond) - golang (original library)
 - [handlebars.js](http://handlebarsjs.com) - javascript
 - [handlebars.java](https://github.com/jknack/handlebars.java) - java
 - [handlebars.rb](https://github.com/cowboyd/handlebars.rb) - ruby
