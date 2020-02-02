@@ -5,7 +5,23 @@ import (
 	"path"
 	"reflect"
 	"strconv"
+	"strings"
 )
+
+var htmlEscaper = strings.NewReplacer(
+	`&`, "&amp;",
+	`'`, "&apos;", // To stay in sync with JS implementation, and make mustache tests pass.
+	`<`, "&lt;",
+	`>`, "&gt;",
+	`"`, "&quot;", // To stay in sync with JS implementation, and make mustache tests pass.
+)
+
+// Escape escapes special HTML characters.
+//
+// It can be used by helpers that return a SafeString and that need to escape some content by themselves.
+func Escape(s string) string {
+	return htmlEscaper.Replace(s)
+}
 
 // SafeString represents a string that must not be escaped.
 //
