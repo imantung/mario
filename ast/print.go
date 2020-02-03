@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+// Print returns a string representation of given AST, that can be used for debugging purpose.
+func Print(node Node) string {
+	visitor := newPrintVisitor()
+	node.Accept(visitor)
+	return visitor.output()
+}
+
 // printVisitor implements the Visitor interface to print a AST.
 type printVisitor struct {
 	buf   string
@@ -17,13 +24,6 @@ type printVisitor struct {
 
 func newPrintVisitor() *printVisitor {
 	return &printVisitor{}
-}
-
-// Print returns a string representation of given AST, that can be used for debugging purpose.
-func Print(node Node) string {
-	visitor := newPrintVisitor()
-	node.Accept(visitor)
-	return visitor.output()
 }
 
 func (v *printVisitor) output() string {
