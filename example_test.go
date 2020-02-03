@@ -29,6 +29,29 @@ func Example() {
 	// Hello World
 }
 
+func Example_map() {
+	source := `{ "name": "{{name}}", "age": {{age}} }`
+	data := map[string]interface{}{
+		"name": "Mario",
+		"age":  12,
+	}
+
+	tpl, err := mario.New().Parse(source)
+	if err != nil {
+		panic(err)
+	}
+
+	var b strings.Builder
+	if err := tpl.Execute(&b, data); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(b.String())
+
+	// Output:
+	// { "name": "Mario", "age": 12 }
+}
+
 func ExampleMust() {
 	source := `Hello {{name}}`
 	data := map[string]string{
