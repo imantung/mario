@@ -226,7 +226,7 @@ func (v *evaluator) curExpr() *ast.Expression {
 //
 
 func (v *evaluator) panic(err error) {
-	panic(fmt.Errorf("Evaluation error: %s\nCurrent node:\n\t%s", err, v.curNode))
+	panic(fmt.Errorf("Evaluation error: %s: %s", v.curNode, err))
 }
 
 func (v *evaluator) panicf(format string, args ...interface{}) {

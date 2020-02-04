@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/imantung/mario"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 )
 
@@ -51,12 +52,28 @@ func TestMustache(t *testing.T) {
 			continue
 		}
 
-		launchTests(t, testsFromMustacheFile(fileName))
+		for i, tt := range testsFromMustacheFile(fileName) {
+			tpl := mario.New()
+			for name, fn := range tt.helpers {
+				tpl.WithHelperFunc(name, fn)
+			}
+			for name, source := range tt.partials {
+				tpl.WithPartial(name, mario.Must(mario.New().Parse(source)))
+			}
+
+			var b strings.Builder
+			if err := mario.Must(tpl.Parse(tt.template)).Execute(&b, tt.data); err != nil {
+				require.EqualError(t, err, tt.expectedError, i)
+			} else {
+				require.Equal(t, tt.expected, b.String(), i)
+			}
+		}
+
 	}
 }
 
-func testsFromMustacheFile(fileName string) []Test {
-	result := []Test{}
+func testsFromMustacheFile(fileName string) []testcase {
+	result := []testcase{}
 
 	fileData, err := ioutil.ReadFile(path.Join("mustache", "specs", fileName))
 	if err != nil {
@@ -74,12 +91,11 @@ func testsFromMustacheFile(fileName string) []Test {
 			continue
 		}
 
-		test := Test{
-			name:     mustacheTest.Name,
-			input:    mustacheTest.Template,
+		test := testcase{
+			template: mustacheTest.Template,
 			data:     mustacheTest.Data,
 			partials: mustacheTest.Partials,
-			output:   mustacheTest.Expected,
+			expected: mustacheTest.Expected,
 		}
 
 		result = append(result, test)
@@ -136,13 +152,14 @@ func mustacheTestFiles() []string {
 // Following tests come fron ~lambdas.yml
 //
 
-var mustacheLambdasTests = []Test{
+var mustacheLambdasTests = []testcase{
 	{
-		"Interpolation",
-		"Hello, {{lambda}}!",
-		map[string]interface{}{"lambda": func() string { return "world" }},
-		nil, nil, nil,
-		"Hello, world!",
+		template: "Hello, {{lambda}}!",
+		data: map[string]interface{}{
+			"lambda": func() string {
+				return "world"
+			}},
+		expected: "Hello, world!",
 	},
 
 	// // SKIP: lambda return value is not parsed
@@ -157,22 +174,22 @@ var mustacheLambdasTests = []Test{
 	// SKIP "Interpolation - Alternate Delimiters"
 
 	{
-		"Interpolation - Multiple Calls",
-		"{{lambda}} == {{{lambda}}} == {{lambda}}",
-		map[string]interface{}{"lambda": func() string {
-			musTestLambdaInterMult++
-			return mario.Str(musTestLambdaInterMult)
-		}},
-		nil, nil, nil,
-		"1 == 2 == 3",
+		template: "{{lambda}} == {{{lambda}}} == {{lambda}}",
+		data: map[string]interface{}{
+			"lambda": func() string {
+				musTestLambdaInterMult++
+				return mario.Str(musTestLambdaInterMult)
+			}},
+		expected: "1 == 2 == 3",
 	},
 
 	{
-		"Escaping",
-		"<{{lambda}}{{{lambda}}}",
-		map[string]interface{}{"lambda": func() string { return ">" }},
-		nil, nil, nil,
-		"<&gt;>",
+		template: "<{{lambda}}{{{lambda}}}",
+		data: map[string]interface{}{
+			"lambda": func() string {
+				return ">"
+			}},
+		expected: "<&gt;>",
 	},
 
 	// // SKIP: "Lambdas used for sections should receive the raw section string."
@@ -204,13 +221,12 @@ var mustacheLambdasTests = []Test{
 	// SKIP: "Section - Alternate Delimiters"
 
 	{
-		"Section - Multiple Calls",
-		"{{#lambda}}FILE{{/lambda}} != {{#lambda}}LINE{{/lambda}}",
-		map[string]interface{}{"lambda": func(options *mario.Options) string {
-			return "__" + options.Fn() + "__"
-		}},
-		nil, nil, nil,
-		"__FILE__ != __LINE__",
+		template: "{{#lambda}}FILE{{/lambda}} != {{#lambda}}LINE{{/lambda}}",
+		data: map[string]interface{}{
+			"lambda": func(options *mario.Options) string {
+				return "__" + options.Fn() + "__"
+			}},
+		expected: "__FILE__ != __LINE__",
 	},
 
 	// // SKIP: "Lambdas used for inverted sections should be considered truthy."
@@ -231,5 +247,21 @@ var mustacheLambdasTests = []Test{
 func TestMustacheLambdas(t *testing.T) {
 	t.Parallel()
 
-	launchTests(t, mustacheLambdasTests)
+	for i, tt := range mustacheLambdasTests {
+		tpl := mario.New()
+		for name, fn := range tt.helpers {
+			tpl.WithHelperFunc(name, fn)
+		}
+		for name, source := range tt.partials {
+			tpl.WithPartial(name, mario.Must(mario.New().Parse(source)))
+		}
+
+		var b strings.Builder
+		if err := mario.Must(tpl.Parse(tt.template)).Execute(&b, tt.data); err != nil {
+			require.EqualError(t, err, tt.expectedError, i)
+		} else {
+			require.Equal(t, tt.expected, b.String(), i)
+		}
+	}
+
 }

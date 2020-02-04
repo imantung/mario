@@ -45,202 +45,156 @@ func gnakHelper(nb int) string {
 	return result
 }
 
-//
-// Tests
-//
-
-var helperTests = []Test{
-	{
-		"simple helper",
-		`{{foo}}`,
-		nil, nil,
-		map[string]interface{}{"foo": barHelper},
-		nil,
-		`bar`,
-	},
-	{
-		"helper with literal string param",
-		`{{echo "foo" 1}}`,
-		nil, nil,
-		map[string]interface{}{"echo": echoHelper},
-		nil,
-		`foo`,
-	},
-	{
-		"helper with identifier param",
-		`{{echo foo 1}}`,
-		map[string]interface{}{"foo": "bar"},
-		nil,
-		map[string]interface{}{"echo": echoHelper},
-		nil,
-		`bar`,
-	},
-	{
-		"helper with literal boolean param",
-		`{{bool true}}`,
-		nil, nil,
-		map[string]interface{}{"bool": boolHelper},
-		nil,
-		`yes it is`,
-	},
-	{
-		"helper with literal boolean param",
-		`{{bool false}}`,
-		nil, nil,
-		map[string]interface{}{"bool": boolHelper},
-		nil,
-		`absolutely not`,
-	},
-	{
-		"helper with literal boolean param",
-		`{{gnak 5}}`,
-		nil, nil,
-		map[string]interface{}{"gnak": gnakHelper},
-		nil,
-		`GnAK!GnAK!GnAK!GnAK!GnAK!`,
-	},
-	{
-		"helper with several parameters",
-		`{{echo "GnAK!" 3}}`,
-		nil, nil,
-		map[string]interface{}{"echo": echoHelper},
-		nil,
-		`GnAK!GnAK!GnAK!`,
-	},
-	{
-		"#if helper with true literal",
-		`{{#if true}}YES MAN{{/if}}`,
-		nil, nil, nil, nil,
-		`YES MAN`,
-	},
-	{
-		"#if helper with false literal",
-		`{{#if false}}YES MAN{{/if}}`,
-		nil, nil, nil, nil,
-		``,
-	},
-	{
-		"#if helper with truthy identifier",
-		`{{#if ok}}YES MAN{{/if}}`,
-		map[string]interface{}{"ok": true},
-		nil, nil, nil,
-		`YES MAN`,
-	},
-	{
-		"#if helper with falsy identifier",
-		`{{#if ok}}YES MAN{{/if}}`,
-		map[string]interface{}{"ok": false},
-		nil, nil, nil,
-		``,
-	},
-	{
-		"#unless helper with true literal",
-		`{{#unless true}}YES MAN{{/unless}}`,
-		nil, nil, nil, nil,
-		``,
-	},
-	{
-		"#unless helper with false literal",
-		`{{#unless false}}YES MAN{{/unless}}`,
-		nil, nil, nil, nil,
-		`YES MAN`,
-	},
-	{
-		"#unless helper with truthy identifier",
-		`{{#unless ok}}YES MAN{{/unless}}`,
-		map[string]interface{}{"ok": true},
-		nil, nil, nil,
-		``,
-	},
-	{
-		"#unless helper with falsy identifier",
-		`{{#unless ok}}YES MAN{{/unless}}`,
-		map[string]interface{}{"ok": false},
-		nil, nil, nil,
-		`YES MAN`,
-	},
-	{
-		"#equal helper with same string var",
-		`{{#equal foo "bar"}}YES MAN{{/equal}}`,
-		map[string]interface{}{"foo": "bar"},
-		nil, nil, nil,
-		`YES MAN`,
-	},
-	{
-		"#equal helper with different string var",
-		`{{#equal foo "baz"}}YES MAN{{/equal}}`,
-		map[string]interface{}{"foo": "bar"},
-		nil, nil, nil,
-		``,
-	},
-	{
-		"#equal helper with same string vars",
-		`{{#equal foo bar}}YES MAN{{/equal}}`,
-		map[string]interface{}{"foo": "baz", "bar": "baz"},
-		nil, nil, nil,
-		`YES MAN`,
-	},
-	{
-		"#equal helper with different string vars",
-		`{{#equal foo bar}}YES MAN{{/equal}}`,
-		map[string]interface{}{"foo": "baz", "bar": "tag"},
-		nil, nil, nil,
-		``,
-	},
-	{
-		"#equal helper with same integer var",
-		`{{#equal foo 1}}YES MAN{{/equal}}`,
-		map[string]interface{}{"foo": 1},
-		nil, nil, nil,
-		`YES MAN`,
-	},
-	{
-		"#equal helper with different integer var",
-		`{{#equal foo 0}}YES MAN{{/equal}}`,
-		map[string]interface{}{"foo": 1},
-		nil, nil, nil,
-		``,
-	},
-	{
-		"#equal helper inside HTML tag",
-		`<option value="test" {{#equal value "test"}}selected{{/equal}}>Test</option>`,
-		map[string]interface{}{"value": "test"},
-		nil, nil, nil,
-		`<option value="test" selected>Test</option>`,
-	},
-	{
-		"#equal full example",
-		`{{#equal foo "bar"}}foo is bar{{/equal}}
-{{#equal foo baz}}foo is the same as baz{{/equal}}
-{{#equal nb 0}}nothing{{/equal}}
-{{#equal nb 1}}there is one{{/equal}}
-{{#equal nb "1"}}everything is stringified before comparison{{/equal}}`,
-		map[string]interface{}{
-			"foo": "bar",
-			"baz": "bar",
-			"nb":  1,
-		},
-		nil, nil, nil,
-		`foo is bar
-foo is the same as baz
-
-there is one
-everything is stringified before comparison`,
-	},
-}
-
-//
-// Let's go
-//
-
 func TestHelper(t *testing.T) {
+	testcases := []testcase{
+		{
+			template: `{{foo}}`,
+			helpers:  map[string]interface{}{"foo": barHelper},
+			expected: `bar`,
+		},
+		{
+			template: `{{echo "foo" 1}}`,
+			helpers:  map[string]interface{}{"echo": echoHelper},
+			expected: `foo`,
+		},
+		{
+			template: `{{echo foo 1}}`,
+			data:     map[string]interface{}{"foo": "bar"},
+			helpers:  map[string]interface{}{"echo": echoHelper},
+			expected: `bar`,
+		},
+		{
+			template: `{{bool true}}`,
+			helpers:  map[string]interface{}{"bool": boolHelper},
+			expected: `yes it is`,
+		},
+		{
+			template: `{{bool false}}`,
+			helpers:  map[string]interface{}{"bool": boolHelper},
+			expected: `absolutely not`,
+		},
+		{
+			template: `{{gnak 5}}`,
+			helpers:  map[string]interface{}{"gnak": gnakHelper},
+			expected: `GnAK!GnAK!GnAK!GnAK!GnAK!`,
+		},
+		{
+			template: `{{echo "GnAK!" 3}}`,
+			helpers:  map[string]interface{}{"echo": echoHelper},
+			expected: `GnAK!GnAK!GnAK!`,
+		},
+		{
+			template: `{{#if true}}YES MAN{{/if}}`,
+			expected: `YES MAN`,
+		},
+		{
+			template: `{{#if false}}YES MAN{{/if}}`,
+			expected: ``,
+		},
+		{
+			template: `{{#if ok}}YES MAN{{/if}}`,
+			data:     map[string]interface{}{"ok": true},
+			expected: `YES MAN`,
+		},
+		{
+			template: `{{#if ok}}YES MAN{{/if}}`,
+			data:     map[string]interface{}{"ok": false},
+			expected: ``,
+		},
+		{
+			template: `{{#unless true}}YES MAN{{/unless}}`,
+			expected: ``,
+		},
+		{
+			template: `{{#unless false}}YES MAN{{/unless}}`,
+			expected: `YES MAN`,
+		},
+		{
+			template: `{{#unless ok}}YES MAN{{/unless}}`,
+			data:     map[string]interface{}{"ok": true},
+			expected: ``,
+		},
+		{
+			template: `{{#unless ok}}YES MAN{{/unless}}`,
+			data:     map[string]interface{}{"ok": false},
+			expected: `YES MAN`,
+		},
+		{
+			template: `{{#equal foo "bar"}}YES MAN{{/equal}}`,
+			data:     map[string]interface{}{"foo": "bar"},
+			expected: `YES MAN`,
+		},
+		{
+			template: `{{#equal foo "baz"}}YES MAN{{/equal}}`,
+			data:     map[string]interface{}{"foo": "bar"},
+			expected: ``,
+		},
+		{
+			template: `{{#equal foo bar}}YES MAN{{/equal}}`,
+			data:     map[string]interface{}{"foo": "baz", "bar": "baz"},
+			expected: `YES MAN`,
+		},
+		{
+			template: `{{#equal foo bar}}YES MAN{{/equal}}`,
+			data:     map[string]interface{}{"foo": "baz", "bar": "tag"},
+			expected: ``,
+		},
+		{
+			template: `{{#equal foo 1}}YES MAN{{/equal}}`,
+			data:     map[string]interface{}{"foo": 1},
+			expected: `YES MAN`,
+		},
+		{
+			template: `{{#equal foo 0}}YES MAN{{/equal}}`,
+			data:     map[string]interface{}{"foo": 1},
+			expected: ``,
+		},
+		{
+			template: `<option value="test" {{#equal value "test"}}selected{{/equal}}>Test</option>`,
+			data:     map[string]interface{}{"value": "test"},
+			expected: `<option value="test" selected>Test</option>`,
+		},
+		{
+			template: `{{#equal foo "bar"}}foo is bar{{/equal}}
+				{{#equal foo baz}}foo is the same as baz{{/equal}}
+				{{#equal nb 0}}nothing{{/equal}}
+				{{#equal nb 1}}there is one{{/equal}}
+				{{#equal nb "1"}}everything is stringified before comparison{{/equal}}`,
+			data: map[string]interface{}{
+				"foo": "bar",
+				"baz": "bar",
+				"nb":  1,
+			},
+			expected: `foo is bar
+				foo is the same as baz
+				
+				there is one
+				everything is stringified before comparison`,
+		},
+	}
+
 	t.Parallel()
 
-	launchTests(t, helperTests)
+	for i, tt := range testcases {
+		tpl := mario.New()
+		for name, fn := range tt.helpers {
+			tpl.WithHelperFunc(name, fn)
+		}
+		for name, source := range tt.partials {
+			tpl.WithPartial(name, mario.Must(mario.New().Parse(source)))
+		}
+
+		var b strings.Builder
+		if err := mario.Must(tpl.Parse(tt.template)).Execute(&b, tt.data); err != nil {
+			require.EqualError(t, err, tt.expectedError, i)
+		} else {
+			require.Equal(t, tt.expected, b.String(), i)
+		}
+	}
 }
 
 //
-// Fixes: https://github.com/imantung/mario/issues/2
+// Fixes: https://github.com/aymerick/raymond/issues/2
 //
 
 type Author struct {
@@ -249,16 +203,17 @@ type Author struct {
 }
 
 func TestHelperCtx(t *testing.T) {
-	tpl := mario.Must(mario.New().
-		WithHelperFunc("template", func(name string, options *mario.Options) mario.SafeString {
-			context := options.Ctx()
-			template := name + " - {{ firstName }} {{ lastName }}"
-			var b strings.Builder
-			mario.Must(mario.New().Parse(template)).Execute(&b, context)
-			return mario.SafeString(b.String())
-		}).
-		Parse(`By {{ template "namefile" }}`),
-	)
+	templateHelper := func(name string, options *mario.Options) mario.SafeString {
+		ctx := options.Ctx()
+		template := name + " - {{ firstName }} {{ lastName }}"
+		return mario.SafeString(compile(template, ctx))
+	}
+
+	tpl, err := mario.New().
+		WithHelperFunc("template", templateHelper).
+		Parse(`By {{ template "namefile" }}`)
+	require.NoError(t, err)
+
 	var b strings.Builder
 	require.NoError(t, tpl.Execute(&b, Author{"Alan", "Johnson"}))
 	require.Equal(t, "By namefile - Alan Johnson", b.String())

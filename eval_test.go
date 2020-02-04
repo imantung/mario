@@ -8,112 +8,117 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var evalTests = []Test{
-	{
-		"only content",
-		"this is content",
-		nil, nil, nil, nil,
-		"this is content",
-	},
-	{
-		"checks path in parent contexts",
-		"{{#a}}{{one}}{{#b}}{{one}}{{two}}{{one}}{{/b}}{{/a}}",
-		map[string]interface{}{"a": map[string]int{"one": 1}, "b": map[string]int{"two": 2}},
-		nil, nil, nil,
-		"1121",
-	},
-	{
-		"block params",
-		"{{#foo as |bar|}}{{bar}}{{/foo}}{{bar}}",
-		map[string]string{"foo": "baz", "bar": "bat"},
-		nil, nil, nil,
-		"bazbat",
-	},
-	{
-		"block params on array",
-		"{{#foo as |bar i|}}{{i}}.{{bar}} {{/foo}}",
-		map[string][]string{"foo": {"baz", "bar", "bat"}},
-		nil, nil, nil,
-		"0.baz 1.bar 2.bat ",
-	},
-	{
-		"nested block params",
-		"{{#foos as |foo iFoo|}}{{#wats as |wat iWat|}}{{iFoo}}.{{iWat}}.{{foo}}-{{wat}} {{/wats}}{{/foos}}",
-		map[string][]string{"foos": {"baz", "bar"}, "wats": {"the", "phoque"}},
-		nil, nil, nil,
-		"0.0.baz-the 0.1.baz-phoque 1.0.bar-the 1.1.bar-phoque ",
-	},
-	{
-		"block params with path reference",
-		"{{#foo as |bar|}}{{bar.baz}}{{/foo}}",
-		map[string]map[string]string{"foo": {"baz": "bat"}},
-		nil, nil, nil,
-		"bat",
-	},
-	{
-		"falsy block evaluation",
-		"{{#foo}}bar{{/foo}} baz",
-		map[string]interface{}{"foo": false},
-		nil, nil, nil,
-		" baz",
-	},
-	{
-		"block helper returns a SafeString",
-		"{{title}} - {{#bold}}{{body}}{{/bold}}",
-		map[string]string{
-			"title": "My new blog post",
-			"body":  "I have so many things to say!",
-		},
-		nil,
-		map[string]interface{}{"bold": func(options *mario.Options) mario.SafeString {
-			return mario.SafeString(`<div class="mybold">` + options.Fn() + "</div>")
-		}},
-		nil,
-		`My new blog post - <div class="mybold">I have so many things to say!</div>`,
-	},
-	{
-		"chained blocks",
-		"{{#if a}}A{{else if b}}B{{else}}C{{/if}}",
-		map[string]interface{}{"b": false},
-		nil, nil, nil,
-		"C",
-	},
-
-	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
-}
-
 func TestEval(t *testing.T) {
+	testcases := []testcase{
+		{
+			template: "this is content",
+			expected: "this is content",
+		},
+		{
+			template: "{{#a}}{{one}}{{#b}}{{one}}{{two}}{{one}}{{/b}}{{/a}}",
+			data: map[string]interface{}{
+				"a": map[string]int{"one": 1},
+				"b": map[string]int{"two": 2},
+			},
+			expected: "1121",
+		},
+		{
+			template: "{{#foo as |bar|}}{{bar}}{{/foo}}{{bar}}",
+			data: map[string]string{
+				"foo": "baz",
+				"bar": "bat",
+			},
+			expected: "bazbat",
+		},
+		{
+			template: "{{#foo as |bar i|}}{{i}}.{{bar}} {{/foo}}",
+			data: map[string][]string{
+				"foo": {"baz", "bar", "bat"},
+			},
+			expected: "0.baz 1.bar 2.bat ",
+		},
+		{
+			template: "{{#foos as |foo iFoo|}}{{#wats as |wat iWat|}}{{iFoo}}.{{iWat}}.{{foo}}-{{wat}} {{/wats}}{{/foos}}",
+			data: map[string][]string{
+				"foos": {"baz", "bar"},
+				"wats": {"the", "phoque"},
+			},
+			expected: "0.0.baz-the 0.1.baz-phoque 1.0.bar-the 1.1.bar-phoque ",
+		},
+		{
+			template: "{{#foo as |bar|}}{{bar.baz}}{{/foo}}",
+			data: map[string]map[string]string{
+				"foo": {"baz": "bat"},
+			},
+			expected: "bat",
+		},
+		{
+			template: "{{#foo}}bar{{/foo}} baz",
+			data:     map[string]interface{}{"foo": false},
+			expected: " baz",
+		},
+		{
+			template: "{{title}} - {{#bold}}{{body}}{{/bold}}",
+			data: map[string]string{
+				"title": "My new blog post",
+				"body":  "I have so many things to say!",
+			},
+			helpers: map[string]interface{}{"bold": func(options *mario.Options) mario.SafeString {
+				return mario.SafeString(`<div class="mybold">` + options.Fn() + "</div>")
+			}},
+			expected: `My new blog post - <div class="mybold">I have so many things to say!</div>`,
+		},
+		{
+			template: "{{#if a}}A{{else if b}}B{{else}}C{{/if}}",
+			data:     map[string]interface{}{"b": false},
+			expected: "C",
+		},
+		{
+			template: `{{foo "bar"}}`,
+			data: map[string]interface{}{
+				"foo": func(a string, b string) string {
+					return "foo"
+				},
+			},
+			expectedError: "Evaluation error: String{Value:'bar', Pos:7}: Helper 'foo' called with wrong number of arguments, needed 2 but got 1",
+		},
+		{
+			template: "{{foo}}",
+			data: map[string]interface{}{
+				"foo": func() {},
+			},
+			expectedError: "Helper function must return a string or a SafeString: ",
+		},
+		{
+			template: "{{foo}}",
+			data: map[string]interface{}{
+				"foo": func() (string, bool, string) {
+					return "foo", true, "bar"
+				},
+			},
+			expectedError: "Helper function must return a string or a SafeString: ",
+		},
+
+		// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
+	}
 	t.Parallel()
 
-	launchTests(t, evalTests)
-}
+	for i, tt := range testcases {
+		tpl := mario.New()
+		for name, fn := range tt.helpers {
+			tpl.WithHelperFunc(name, fn)
+		}
+		for name, source := range tt.partials {
+			tpl.WithPartial(name, mario.Must(mario.New().Parse(source)))
+		}
 
-var evalErrors = []Test{
-	{
-		"functions with wrong number of arguments",
-		`{{foo "bar"}}`,
-		map[string]interface{}{"foo": func(a string, b string) string { return "foo" }},
-		nil, nil, nil,
-		"Helper 'foo' called with wrong number of arguments, needed 2 but got 1",
-	},
-	{
-		"functions with wrong number of returned values (1)",
-		"{{foo}}",
-		map[string]interface{}{"foo": func() {}},
-		nil, nil, nil,
-		"Helper function must return a string or a SafeString",
-	},
-	{
-		"functions with wrong number of returned values (2)",
-		"{{foo}}",
-		map[string]interface{}{"foo": func() (string, bool, string) { return "foo", true, "bar" }},
-		nil, nil, nil,
-		"Helper function must return a string or a SafeString",
-	},
-}
-
-func TestEvalErrors(t *testing.T) {
-	launchErrorTests(t, evalErrors)
+		var b strings.Builder
+		if err := mario.Must(tpl.Parse(tt.template)).Execute(&b, tt.data); err != nil {
+			require.EqualError(t, err, tt.expectedError, i)
+		} else {
+			require.Equal(t, tt.expected, b.String(), i)
+		}
+	}
 }
 
 func TestEvalStruct(t *testing.T) {
@@ -168,9 +173,7 @@ func TestEvalStruct(t *testing.T) {
 		},
 	}
 
-	var b strings.Builder
-	require.NoError(t, mario.Must(mario.New().Parse(source)).Execute(&b, data))
-	require.Equal(t, expected, b.String())
+	require.Equal(t, expected, compile(source, data))
 }
 
 func TestEvalStructTag(t *testing.T) {
@@ -224,9 +227,7 @@ func TestEvalStructTag(t *testing.T) {
 		},
 	}
 
-	var b strings.Builder
-	require.NoError(t, mario.Must(mario.New().Parse(source)).Execute(&b, data))
-	require.Equal(t, expected, b.String())
+	require.Equal(t, expected, compile(source, data))
 }
 
 type TestFoo struct {
@@ -243,9 +244,7 @@ func TestEvalMethod(t *testing.T) {
 	expected := `Subject is foo! YES I SAID foo!`
 	data := &TestFoo{}
 
-	var b strings.Builder
-	require.NoError(t, mario.Must(mario.New().Parse(source)).Execute(&b, data))
-	require.Equal(t, expected, b.String())
+	require.Equal(t, expected, compile(source, data))
 }
 
 type TestBar struct {
@@ -266,8 +265,6 @@ func TestEvalMethodReturningFunc(t *testing.T) {
 	expected := `Subject is bar! YES I SAID bar!`
 	data := &TestBar{}
 
-	var b strings.Builder
-	require.NoError(t, mario.Must(mario.New().Parse(source)).Execute(&b, data))
-	require.Equal(t, expected, b.String())
+	require.Equal(t, expected, compile(source, data))
 
 }

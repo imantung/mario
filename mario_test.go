@@ -1,7 +1,6 @@
 package mario_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/imantung/mario"
@@ -14,8 +13,8 @@ func TestRegisterBuildInHelper(t *testing.T) {
 	})
 	defer mario.ResetHelpers()
 
-	tpl := mario.Must(mario.New().Parse(`{{hello}}`))
-	var b strings.Builder
-	require.NoError(t, tpl.Execute(&b, Author{"Alan", "Johnson"}))
-	require.Equal(t, "hello world", b.String())
+	template := "{{hello}}"
+	ctx := Author{"Alan", "Johnson"}
+
+	require.Equal(t, "hello world", compile(template, ctx))
 }
