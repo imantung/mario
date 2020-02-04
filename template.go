@@ -21,15 +21,7 @@ type Template struct {
 // New mustache handlebars template
 func New() *Template {
 	return &Template{
-		helpers: map[string]*Helper{
-			"if":     ifHelper,
-			"unless": unlessHelper,
-			"with":   withHelper,
-			"each":   eachHelper,
-			"log":    logHelper,
-			"lookup": lookupHelper,
-			"equal":  equalHelper,
-		},
+		helpers:  make(map[string]*Helper),
 		partials: make(map[string]*Template),
 	}
 }
@@ -67,7 +59,7 @@ func (tpl *Template) ExecuteWith(w io.Writer, ctx interface{}, frame *DataFrame)
 		frame = NewDataFrame()
 	}
 	eval := &evaluator{
-		helpers:   tpl.helpers,
+		helpers:   AppendWithBuildInHelper(tpl.helpers),
 		partials:  tpl.partials,
 		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
 		dataFrame: frame,

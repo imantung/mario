@@ -6,44 +6,73 @@ import (
 )
 
 var (
-	ifHelper     = CreateHelper(If)
-	unlessHelper = CreateHelper(Unless)
-	withHelper   = CreateHelper(With)
-	eachHelper   = CreateHelper(Each)
-	logHelper    = CreateHelper(Log)
-	lookupHelper = CreateHelper(Lookup)
-	equalHelper  = CreateHelper(Equal)
+	buildinHelpers map[string]*Helper
 )
 
-// If is build-in helper function for if
-func If(conditional interface{}, options *Options) interface{} {
+func init() {
+	ResetBuildInHelpers()
+}
+
+// ResetBuildInHelpers to return current build-in helpers
+func ResetBuildInHelpers() {
+	buildinHelpers = map[string]*Helper{
+		// Original: https://handlebarsjs.com/guide/builtin-helpers.html
+		"if":     CreateHelper(ifHelper),
+		"unless": CreateHelper(unlessHelper),
+		"with":   CreateHelper(withHelper),
+		"each":   CreateHelper(eachHelper),
+		"log":    CreateHelper(logHelper),
+		"lookup": CreateHelper(lookupHelper),
+
+		// Additional build-in helper
+		"equal": CreateHelper(equalHelper),
+	}
+}
+
+// RegisterHelper to register new build-in helpers
+func RegisterHelper(name string, fn interface{}) {
+	buildinHelpers[name] = CreateHelper(fn)
+}
+
+// BuildInHelpers to return current build-in helpers
+func BuildInHelpers() map[string]*Helper {
+	return buildinHelpers
+}
+
+// AppendWithBuildInHelper to return new helpers with build in helpers
+func AppendWithBuildInHelper(helpers map[string]*Helper) map[string]*Helper {
+	updated := make(map[string]*Helper)
+	for name, helper := range buildinHelpers {
+		updated[name] = helper
+	}
+	for name, helper := range helpers {
+		updated[name] = helper
+	}
+	return updated
+}
+
+func ifHelper(conditional interface{}, options *Options) interface{} {
 	if options.isIncludableZero() || IsTrue(conditional) {
 		return options.Fn()
 	}
-
 	return options.Inverse()
 }
 
-// Unless is build-in helper function for unless
-func Unless(conditional interface{}, options *Options) interface{} {
+func unlessHelper(conditional interface{}, options *Options) interface{} {
 	if options.isIncludableZero() || IsTrue(conditional) {
 		return options.Inverse()
 	}
-
 	return options.Fn()
 }
 
-// With is build-in helper function for with
-func With(context interface{}, options *Options) interface{} {
+func withHelper(context interface{}, options *Options) interface{} {
 	if IsTrue(context) {
 		return options.FnWith(context)
 	}
-
 	return options.Inverse()
 }
 
-// Each is build-in helper function for each
-func Each(context interface{}, options *Options) interface{} {
+func eachHelper(context interface{}, options *Options) interface{} {
 	if !IsTrue(context) {
 		return options.Inverse()
 	}
@@ -98,23 +127,18 @@ func Each(context interface{}, options *Options) interface{} {
 	return result
 }
 
-// Log is build-in helper function for log
-func Log(message string) interface{} {
+func logHelper(message string) interface{} {
 	log.Print(message)
 	return ""
 }
 
-// Lookup is build-in helper function for lookup
-func Lookup(obj interface{}, field string, options *Options) interface{} {
+func lookupHelper(obj interface{}, field string, options *Options) interface{} {
 	return Str(options.Eval(obj, field))
 }
 
-// Equal is build-in helper function for qual
-// Ref: https://github.com/aymerick/raymond/issues/7
-func Equal(a interface{}, b interface{}, options *Options) interface{} {
+func equalHelper(a interface{}, b interface{}, options *Options) interface{} {
 	if Str(a) == Str(b) {
 		return options.Fn()
 	}
-
 	return ""
 }
