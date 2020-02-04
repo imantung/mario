@@ -45,22 +45,27 @@ type evaluator struct {
 	curNode ast.Node
 }
 
-// // Newevaluator instanciate a new evaluation visitor with given context and initial private data frame
-// //
-// // If privData is nil, then a default data frame is created
-// func newevaluator(tpl *Template, ctx interface{}, privData *DataFrame) *evaluator {
-// 	frame := privData
-// 	if frame == nil {
-// 		frame = NewDataFrame()
-// 	}
+// CreateEvaluator to return create new instance of evaluator from template and context
+func createEvaluator(tpl *Template, ctx interface{}, frame *DataFrame) *evaluator {
+	return &evaluator{
+		helpers:   evaluatorHelpers(tpl.helpers),
+		partials:  tpl.partials,
+		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
+		dataFrame: frame,
+		exprFunc:  make(map[*ast.Expression]bool),
+	}
+}
 
-// 	return &evaluator{
-// 		tpl:       tpl,
-// 		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
-// 		dataFrame: frame,
-// 		exprFunc:  make(map[*ast.Expression]bool),
-// 	}
-// }
+func evaluatorHelpers(h map[string]*Helper) map[string]*Helper {
+	updated := make(map[string]*Helper)
+	for name, helper := range helpers {
+		updated[name] = helper
+	}
+	for name, helper := range h {
+		updated[name] = helper
+	}
+	return updated
+}
 
 // at sets current node
 func (v *evaluator) at(node ast.Node) {
@@ -220,14 +225,12 @@ func (v *evaluator) curExpr() *ast.Expression {
 // Error functions
 //
 
-// errPanic panics
-func (v *evaluator) errPanic(err error) {
+func (v *evaluator) panic(err error) {
 	panic(fmt.Errorf("Evaluation error: %s\nCurrent node:\n\t%s", err, v.curNode))
 }
 
-// errorf panics with a custom message
-func (v *evaluator) errorf(format string, args ...interface{}) {
-	v.errPanic(fmt.Errorf(format, args...))
+func (v *evaluator) panicf(format string, args ...interface{}) {
+	v.panic(fmt.Errorf(format, args...))
 }
 
 //
@@ -592,7 +595,7 @@ func (v *evaluator) callFunc(name string, funcVal reflect.Value, options *Option
 	}
 
 	if !addOptions && (len(params) != numIn) {
-		v.errorf("Helper '%s' called with wrong number of arguments, needed %d but got %d", name, numIn, len(params))
+		v.panicf("Helper '%s' called with wrong number of arguments, needed %d but got %d", name, numIn, len(params))
 	}
 
 	// check and collect arguments
@@ -621,7 +624,7 @@ func (v *evaluator) callFunc(name string, funcVal reflect.Value, options *Option
 				val, _ := isTrueValue(arg)
 				arg = reflect.ValueOf(val)
 			} else {
-				v.errorf("Helper %s called with argument %d with type %s but it should be %s", name, i, arg.Type(), argType)
+				v.panicf("Helper %s called with argument %d with type %s but it should be %s", name, i, arg.Type(), argType)
 			}
 		}
 
@@ -672,11 +675,11 @@ func (v *evaluator) helperOptions(node *ast.Expression) *Options {
 // partialContext computes partial context
 func (v *evaluator) partialContext(node *ast.PartialStatement) reflect.Value {
 	if nb := len(node.Params); nb > 1 {
-		v.errorf("Unsupported number of partial arguments: %d", nb)
+		v.panicf("Unsupported number of partial arguments: %d", nb)
 	}
 
 	if (len(node.Params) > 0) && (node.Hash != nil) {
-		v.errorf("Passing both context and named parameters to a partial is not allowed")
+		v.panicf("Passing both context and named parameters to a partial is not allowed")
 	}
 
 	if len(node.Params) == 1 {
@@ -846,12 +849,12 @@ func (v *evaluator) VisitPartial(node *ast.PartialStatement) interface{} {
 	}
 
 	if name == "" {
-		v.errorf("Unexpected partial name: %q", node.Name)
+		v.panicf("Unexpected partial name: %q", node.Name)
 	}
 
 	partial := v.partials[name]
 	if partial == nil {
-		v.errorf("Partial not found: %s", name)
+		v.panicf("Partial not found: %s", name)
 	}
 
 	return v.evalPartial(partial, node)

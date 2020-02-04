@@ -263,16 +263,3 @@ func TestHelperCtx(t *testing.T) {
 	require.NoError(t, tpl.Execute(&b, Author{"Alan", "Johnson"}))
 	require.Equal(t, "By namefile - Alan Johnson", b.String())
 }
-
-func TestRegisterBuildInHelper(t *testing.T) {
-	mario.RegisterHelper("hello", func() string {
-		return "hello world"
-	})
-	defer mario.ResetBuildInHelpers()
-
-	tpl := mario.Must(mario.New().Parse(`{{hello}}`))
-	var b strings.Builder
-	require.NoError(t, tpl.Execute(&b, Author{"Alan", "Johnson"}))
-	require.Equal(t, "hello world", b.String())
-
-}

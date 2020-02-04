@@ -2,7 +2,6 @@ package mario
 
 import (
 	"io"
-	"reflect"
 	"runtime"
 	"sync"
 
@@ -58,13 +57,7 @@ func (tpl *Template) ExecuteWith(w io.Writer, ctx interface{}, frame *DataFrame)
 	if frame == nil {
 		frame = NewDataFrame()
 	}
-	eval := &evaluator{
-		helpers:   AppendWithBuildInHelper(tpl.helpers),
-		partials:  tpl.partials,
-		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
-		dataFrame: frame,
-		exprFunc:  make(map[*ast.Expression]bool),
-	}
+	eval := createEvaluator(tpl, ctx, frame)
 	return eval.VisitProgram(w, tpl.Program())
 }
 

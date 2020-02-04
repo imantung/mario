@@ -5,52 +5,6 @@ import (
 	"reflect"
 )
 
-var (
-	buildinHelpers map[string]*Helper
-)
-
-func init() {
-	ResetBuildInHelpers()
-}
-
-// ResetBuildInHelpers to return current build-in helpers
-func ResetBuildInHelpers() {
-	buildinHelpers = map[string]*Helper{
-		// Original: https://handlebarsjs.com/guide/builtin-helpers.html
-		"if":     CreateHelper(ifHelper),
-		"unless": CreateHelper(unlessHelper),
-		"with":   CreateHelper(withHelper),
-		"each":   CreateHelper(eachHelper),
-		"log":    CreateHelper(logHelper),
-		"lookup": CreateHelper(lookupHelper),
-
-		// Additional build-in helper
-		"equal": CreateHelper(equalHelper),
-	}
-}
-
-// RegisterHelper to register new build-in helpers
-func RegisterHelper(name string, fn interface{}) {
-	buildinHelpers[name] = CreateHelper(fn)
-}
-
-// BuildInHelpers to return current build-in helpers
-func BuildInHelpers() map[string]*Helper {
-	return buildinHelpers
-}
-
-// AppendWithBuildInHelper to return new helpers with build in helpers
-func AppendWithBuildInHelper(helpers map[string]*Helper) map[string]*Helper {
-	updated := make(map[string]*Helper)
-	for name, helper := range buildinHelpers {
-		updated[name] = helper
-	}
-	for name, helper := range helpers {
-		updated[name] = helper
-	}
-	return updated
-}
-
 func ifHelper(conditional interface{}, options *Options) interface{} {
 	if options.isIncludableZero() || IsTrue(conditional) {
 		return options.Fn()
