@@ -24,7 +24,7 @@ go get -u github.com/imantung/mario
 
 ## Usage
 
-Mario's function implement mimic [go template](https://golang.org/pkg/text/template/) for convenience.
+Mario's function implementation mimic [go template](https://golang.org/pkg/text/template/) for convenience.
 
 ```go
 source := `Hello {{name}}`
