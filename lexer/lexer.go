@@ -21,6 +21,10 @@ const (
 	closeMustache               = "}}"
 	closeStripMustache          = "~}}"
 	closeUnescapedStripMustache = "}~}}"
+	openComment                 = "{{!"
+	openCommentStrip            = "{{~!"
+	openCommentDash             = "{{!--"
+	openCommentStripDash        = "{{~!--"
 )
 
 const eof = -1
@@ -74,11 +78,9 @@ var (
 	rOpen            = regexp.MustCompile(`^\{\{~?&?`)
 	rClose           = regexp.MustCompile(`^~?\}\}`)
 	rOpenBlockParams = regexp.MustCompile(`^as\s+\|`)
-	// {{!--  ... --}}
-	rOpenCommentDash  = regexp.MustCompile(`^\{\{~?!--\s*`)
+	// --}} or --~}}
 	rCloseCommentDash = regexp.MustCompile(`^\s*--~?\}\}`)
-	// {{! ... }}
-	rOpenComment  = regexp.MustCompile(`^\{\{~?!\s*`)
+	// }} or ~}}
 	rCloseComment = regexp.MustCompile(`^\s*~?\}\}`)
 )
 
@@ -263,34 +265,39 @@ func lexContent(l *Lexer) lexFunc {
 		} else {
 			return l.errorf("Unclosed raw block")
 		}
-	} else if l.isString(escapedEscapedOpenMustache) {
-		// \\{{
+	} else {
+		switch l.peek() {
+		case '\\':
+			if l.isString(escapedEscapedOpenMustache) {
+				// \\{{
 
-		// emit content with only one escaped escape
-		l.next()
-		l.emitContent()
+				// emit content with only one escaped escape
+				l.next()
+				l.emitContent()
 
-		// ignore second escaped escape
-		l.next()
-		l.ignore()
+				// ignore second escaped escape
+				l.next()
+				l.ignore()
 
-		next = lexContent
-	} else if l.isString(escapedOpenMustache) {
-		// \{{
-		next = lexEscapedOpenMustache
-	} else if str := l.findRegexp(rOpenCommentDash); str != "" {
-		// {{!--
-		l.closeComment = rCloseCommentDash
-
-		next = lexComment
-	} else if str := l.findRegexp(rOpenComment); str != "" {
-		// {{!
-		l.closeComment = rCloseComment
-
-		next = lexComment
-	} else if l.isString(openMustache) {
-		// {{
-		next = lexOpenMustache
+				next = lexContent
+			} else if l.isString(escapedOpenMustache) {
+				// \{{
+				next = lexEscapedOpenMustache
+			}
+		case '{':
+			if l.isString(openCommentDash) || l.isString(openCommentStripDash) {
+				// {{!--
+				l.closeComment = rCloseCommentDash
+				next = lexComment
+			} else if l.isString(openComment) || l.isString(openCommentStrip) {
+				// {{!
+				l.closeComment = rCloseComment
+				next = lexComment
+			} else if l.isString(openMustache) {
+				// {{
+				next = lexOpenMustache
+			}
+		}
 	}
 
 	if next != nil {
